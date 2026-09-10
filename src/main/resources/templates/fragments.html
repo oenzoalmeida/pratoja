@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<svg th:fragment="icon(name, classes)" th:class="|icon ${classes}|" aria-hidden="true" focusable="false"><use th:href="|/images/lucide-sprite.svg#${name}|"></use></svg>
+
+<header th:fragment="header" class="site-header">
+  <a class="brand" href="/" aria-label="PratoJá — início"><span class="brand-mark">P</span><span>Prato<span>Já</span></span></a>
+  <nav class="desktop-nav" aria-label="Navegação principal">
+    <a href="/"><svg th:replace="~{fragments :: icon('house','')}"></svg>Início</a>
+    <a href="/cardapio"><svg th:replace="~{fragments :: icon('utensils','')}"></svg>Cardápio</a>
+    <a href="/monte-seu-prato"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg>Monte seu prato</a>
+  </nav>
+  <div class="header-actions">
+    <a class="cart-link" href="/carrinho" aria-label="Abrir sacola"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span><strong data-cart-count>0</strong></a>
+    <a sec:authorize="isAnonymous()" class="btn btn-outline" href="/login"><svg th:replace="~{fragments :: icon('user','')}"></svg>Entrar</a>
+    <a sec:authorize="hasRole('CUSTOMER')" class="avatar-link" href="/perfil" aria-label="Meu perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span sec:authentication="name">Conta</span></a>
+    <a sec:authorize="hasRole('ADMIN')" class="btn btn-dark" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg>Painel</a>
+  </div>
+</header>
+
+<nav th:fragment="mobileNav" class="mobile-nav" aria-label="Navegação móvel">
+  <a href="/"><svg th:replace="~{fragments :: icon('house','')}"></svg><span>Início</span></a>
+  <a href="/cardapio"><svg th:replace="~{fragments :: icon('utensils','')}"></svg><span>Cardápio</span></a>
+  <a href="/monte-seu-prato"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Montar</span></a>
+  <a href="/carrinho"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span></a>
+  <a sec:authorize="isAnonymous()" href="/login"><svg th:replace="~{fragments :: icon('log-in','')}"></svg><span>Entrar</span></a>
+  <a sec:authorize="hasRole('CUSTOMER')" href="/perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span>Perfil</span></a>
+  <a sec:authorize="hasRole('ADMIN')" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Painel</span></a>
+</nav>
+
+<footer th:fragment="footer" class="footer"><div class="brand brand-light"><span class="brand-mark">P</span><span>Prato<span>Já</span></span></div><p>Comida de verdade, do seu jeito.</p><small>© 2026 PratoJá · Demonstração acadêmica</small></footer>
+</body>
+</html>

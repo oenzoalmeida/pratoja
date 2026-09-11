@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: pratoja
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    envVars:
+      - key: PRATOJA_DEMO_MODE
+        value: "true"

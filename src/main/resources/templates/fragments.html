@@ -28,6 +28,6 @@
   <a sec:authorize="hasRole('ADMIN')" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Painel</span></a>
 </nav>
 
-<footer th:fragment="footer" class="footer"><div class="brand brand-light"><span class="brand-mark">P</span><span>Prato<span>Já</span></span></div><p>Comida de verdade, do seu jeito.</p><small>© 2026 PratoJá · Demonstração acadêmica</small></footer>
+<footer th:fragment="footer" class="footer"><div class="brand brand-light"><span class="brand-mark">P</span><span>Prato<span>Já</span></span></div><p>Comida de verdade, do seu jeito.</p><small>© 2026 PratoJá · Demonstração acadêmica · <a th:href="@{/termos}">Termos de Uso</a> · <a th:href="@{/privacidade}">Política de Privacidade</a></small></footer>
 </body>
 </html>

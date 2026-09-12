@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Política de Privacidade do PratoJá."><title>Política de Privacidade — PratoJá</title><link rel="stylesheet" href="/css/app.css"></head>
+<body><header th:replace="~{fragments :: header}"></header>
+<main class="page-shell legal-page">
+  <div class="page-intro"><span class="eyebrow">Documento</span><h1>Política de Privacidade</h1><p class="muted-message">Última atualização: 12 de setembro de 2026 · versão 1.0</p></div>
+  <section class="panel">
+    <h2>1. Dados tratados</h2>
+    <p>No cadastro: <strong>nome</strong>, <strong>e-mail</strong>, <strong>telefone</strong> e <strong>senha</strong> (armazenada apenas como hash bcrypt). Para entrega: <strong>endereços</strong> (CEP, rua, número, complemento, bairro, cidade e UF). Pelo uso: <strong>pedidos</strong> (itens, valores, forma de pagamento simulada, observações) e <strong>avaliações</strong>. Não coletamos CPF, dados bancários nem dados de navegação para publicidade.</p>
+    <h2>2. Finalidades</h2>
+    <p>Autenticação, criação e acompanhamento dos seus pedidos, entrega dos endereços cadastrados e exibição do histórico. Os dados administrativos do cardápio não são dados pessoais.</p>
+    <h2>3. Base legal</h2>
+    <p>Execução de contrato (conta e pedidos), conforme o art. 7º, V, da Lei Geral de Proteção de Dados — LGPD (Lei nº 13.709/2018).</p>
+    <h2>4. Obrigatoriedade</h2>
+    <p>Nome, e-mail, telefone e senha são obrigatórios para a conta; endereço é obrigatório apenas para pedidos com entrega. Os demais dados são opcionais.</p>
+    <h2>5. Armazenamento e segurança</h2>
+    <p>Os dados ficam em banco PostgreSQL em produção (H2 em memória em desenvolvimento). Adotamos: hash bcrypt (custo 12) para senhas, sessão com cookie HttpOnly/SameSite, proteção CSRF nos formulários, SQL parametrizado via JPA e controles de acesso por papel (cliente/administrador). Uploads de imagem restritos a administradores e a formatos de imagem.</p>
+    <h2>6. Retenção e exclusão</h2>
+    <p>Os dados são mantidos enquanto a conta existir. Ao usar "Excluir minha conta" no perfil: <strong>nome, e-mail, telefone, endereços, senha e tokens de redefinição são apagados de forma definitiva</strong>; o histórico de pedidos é preservado de forma <strong>anonimizada</strong>, sem qualquer vínculo com você, e a conta é desativada. Avaliações e endereços deixam de existir ou ficam sem vínculo pessoal.</p>
+    <h2>7. Compartilhamento e transferência internacional</h2>
+    <p>Seus dados não são vendidos nem compartilhados comercialmente. Utilizamos apenas provedor de infraestrutura para a demonstração: <strong>Render</strong> (hospedagem, servidores nos Estados Unidos), o que pode implicar <strong>transferência internacional de dados</strong>, nos termos do art. 33 da LGPD. Não há gateway de pagamento nem envio de e-mail — o pagamento é simulado na aplicação.</p>
+    <h2>8. Cookies</h2>
+    <p>Utilizamos apenas o cookie de sessão (<code>JSESSIONID</code>) e o token CSRF, estritamente necessários ao funcionamento. Não usamos cookies de analytics, publicidade ou rastreamento.</p>
+    <h2>9. Direitos do titular</h2>
+    <p>Conforme a LGPD, você pode solicitar acesso, correção e exclusão dos seus dados. Correção de nome, telefone e endereços e a <strong>exclusão definitiva</strong> estão disponíveis na página "Meu perfil"; demais solicitações pelo contato abaixo.</p>
+    <h2>10. Menores de idade</h2>
+    <p>[PENDENTE DE DEFINIÇÃO]</p>
+    <h2>11. Alterações desta política</h2>
+    <p>Esta política pode ser atualizada; a data no topo indica a versão vigente.</p>
+    <h2>12. Contato</h2>
+    <p>Contato para exercício de direitos: enzoalmeida.dev@outlook.com.</p>
+    <p class="muted-message">Consulte também os <a th:href="@{/termos}">Termos de Uso</a>.</p>
+  </section>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body></html>

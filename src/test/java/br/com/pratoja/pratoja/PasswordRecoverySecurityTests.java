@@ -1,5 +1,6 @@
 package br.com.pratoja.pratoja;
 
+import br.com.pratoja.pratoja.domain.DomainTypes;
 import br.com.pratoja.pratoja.domain.User;
 import br.com.pratoja.pratoja.repository.PasswordResetTokenRepository;
 import br.com.pratoja.pratoja.repository.UserRepository;
@@ -31,6 +32,7 @@ class PasswordRecoverySecurityTests {
     private static final String LINK_MARKER = "redefinir-senha?token=";
     private static final String NEUTRAL_MESSAGE = "Se o e-mail estiver cadastrado";
     private static final String SEEDED_DEMO_PASSWORD = "Cliente@123";
+    private static final String TEST_ONLY_ADMIN_PASSWORD = "AdminFicticioApenasTeste#9042-nao-usar";
 
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
@@ -53,7 +55,7 @@ class PasswordRecoverySecurityTests {
 
     @Test
     void adminAccountNeverGetsDemoResetLinkOrToken() throws Exception {
-        User admin = users.findByEmailIgnoreCase(ADMIN_EMAIL).orElseThrow();
+        User admin = users.findByEmailIgnoreCase(ADMIN_EMAIL).orElseGet(this::createTestAdminAccount);
         String hashBefore = admin.getPasswordHash();
         mvc.perform(post("/recuperar-senha").with(csrf()).param("email", ADMIN_EMAIL))
             .andExpect(status().isOk())
@@ -62,6 +64,18 @@ class PasswordRecoverySecurityTests {
         assertEquals(0, tokenCount(admin.getId()), "nenhum token pode ser criado para a conta administrativa em demo mode");
         assertEquals(hashBefore, users.findByEmailIgnoreCase(ADMIN_EMAIL).orElseThrow().getPasswordHash(),
             "o hash da conta administrativa não pode mudar");
+    }
+
+    // O DataSeeder de produção não cria admin sem PRATOJA_ADMIN_PASSWORD e o CI não define segredo externo:
+    // o teste provisiona a própria conta administrativa com senha fictícia, exclusiva deste teste.
+    private User createTestAdminAccount() {
+        User admin = new User();
+        admin.setName("Admin Somente Teste");
+        admin.setEmail(ADMIN_EMAIL);
+        admin.setPhone("(00) 90000-0000");
+        admin.setPasswordHash(encoder.encode(TEST_ONLY_ADMIN_PASSWORD));
+        admin.setRole(DomainTypes.Role.ADMIN);
+        return users.save(admin);
     }
 
     @Test

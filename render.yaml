@@ -10,4 +10,17 @@ services:
     autoDeployTrigger: commit
     envVars:
       - key: PRATOJA_DEMO_MODE
-        value: "true"
+        value: "false"
+      # Segredo: o valor é informado no painel do Render (nunca versionado).
+      - key: PRATOJA_ADMIN_PASSWORD
+        sync: false
+      # Banco persistente PostgreSQL (Supabase free). Profile postgres = application-postgres.properties.
+      - key: SPRING_PROFILES_ACTIVE
+        value: postgres
+      # DATABASE_URL = string JDBC completa, ex.: jdbc:postgresql://aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false

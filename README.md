@@ -86,8 +86,9 @@ Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin) 
 
 ## Deploy
 
-- **Render** (blueprint em `render.yaml`): serviço Docker com health check em `/`, variável `PRATOJA_DEMO_MODE=true` e `PRATOJA_ADMIN_PASSWORD` definido no painel.
-- **Banco:** PostgreSQL gerenciado (configuração em `application-postgres.properties`).
+- **Render** (blueprint em `render.yaml`): serviço Docker com health check em `/`, `PRATOJA_DEMO_MODE=false`, `SPRING_PROFILES_ACTIVE=postgres` e segredos (`PRATOJA_ADMIN_PASSWORD`, `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`) definidos no painel — nunca versionados.
+- **Banco:** PostgreSQL persistente (Supabase, plano free, região us-west-1/Oregon). O profile `postgres` lê a conexão de `DATABASE_URL` (JDBC, com `?sslmode=require`); o schema é criado pelo **Flyway** e os dados demo pelo `DataSeeder`.
+- **Produção exige** `PRATOJA_ADMIN_PASSWORD`: sem ela o boot falha (não existe senha padrão).
 - **CI:** GitHub Actions executa `mvnw test` em cada push.
 
 ## Limitações conhecidas

@@ -3,6 +3,8 @@ package br.com.pratoja.pratoja.config;
 import br.com.pratoja.pratoja.domain.*;
 import br.com.pratoja.pratoja.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,20 +14,27 @@ import java.util.List;
 
 @Component @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
+    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
     private final UserRepository users; private final CategoryRepository categories; private final ProductRepository products;
     private final OptionGroupRepository groups; private final ProductOptionRepository options; private final PasswordEncoder encoder;
 
     @Override @Transactional public void run(String... args) {
-        // A senha administrativa vem do ambiente (PRATOJA_ADMIN_PASSWORD); o padrão serve apenas para desenvolvimento local.
-        String configuredPassword = System.getenv("PRATOJA_ADMIN_PASSWORD");
-        final String adminPassword = (configuredPassword == null || configuredPassword.isBlank()) ? "Admin@123" : configuredPassword;
-        seedUser("Administrador PratoJá", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.ADMIN);
-        users.findByEmailIgnoreCase("admin@pratoja.com.br").ifPresent(admin -> {
-            if (!encoder.matches(adminPassword, admin.getPasswordHash())) {
-                admin.setPasswordHash(encoder.encode(adminPassword));
-                users.save(admin);
-            }
-        });
+        // A senha administrativa vem exclusivamente de PRATOJA_ADMIN_PASSWORD (nenhum padrão embutido).
+        // Em produção (Render) a ausência derruba o boot; localmente apenas pula a criação/sincronização do admin.
+        final String adminPassword = System.getenv("PRATOJA_ADMIN_PASSWORD");
+        final boolean missing = adminPassword == null || adminPassword.isBlank();
+        if (missing && "true".equalsIgnoreCase(System.getenv("RENDER")))
+            throw new IllegalStateException("PRATOJA_ADMIN_PASSWORD não definida: obrigatória em produção. Configure em Environment do serviço no Render.");
+        if (missing) log.warn("PRATOJA_ADMIN_PASSWORD ausente: conta admin não criada/sincronizada (obrigatória em produção).");
+        else {
+            seedUser("Administrador PratoJá", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.ADMIN);
+            users.findByEmailIgnoreCase("admin@pratoja.com.br").ifPresent(admin -> {
+                if (!encoder.matches(adminPassword, admin.getPasswordHash())) {
+                    admin.setPasswordHash(encoder.encode(adminPassword));
+                    users.save(admin);
+                }
+            });
+        }
         seedUser("Cliente Demonstração", "cliente@pratoja.com.br", "(11) 98888-2000", "Cliente@123", DomainTypes.Role.CUSTOMER);
         if (categories.count() > 0) return;
         Category pratos = category("Pratos executivos", 1); Category lanches = category("Lanches", 2); Category bebidas = category("Bebidas", 3); Category monte = category("Monte seu prato", 0);

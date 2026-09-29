@@ -17,6 +17,7 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
     private final UserRepository users; private final CategoryRepository categories; private final ProductRepository products;
     private final OptionGroupRepository groups; private final ProductOptionRepository options; private final PasswordEncoder encoder;
+    private final StoreRepository stores;
 
     @Override @Transactional public void run(String... args) {
         // A senha administrativa vem exclusivamente de PRATOJA_ADMIN_PASSWORD (nenhum padrão embutido).
@@ -25,19 +26,26 @@ public class DataSeeder implements CommandLineRunner {
         final boolean missing = adminPassword == null || adminPassword.isBlank();
         if (missing && "true".equalsIgnoreCase(System.getenv("RENDER")))
             throw new IllegalStateException("PRATOJA_ADMIN_PASSWORD não definida: obrigatória em produção. Configure em Environment do serviço no Render.");
+        // Loja migrada pela V6 (backfill da antiga store_settings singleton -> id=1).
+        Store loja = stores.findFirstByActiveTrueOrderByIdAsc().orElseGet(this::defaultStore);
         if (missing) log.warn("PRATOJA_ADMIN_PASSWORD ausente: conta admin não criada/sincronizada (obrigatória em produção).");
         else {
-            seedUser("Administrador", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.ADMIN);
+            seedUser("Administrador", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.STORE_ADMIN, loja);
             users.findByEmailIgnoreCase("admin@pratoja.com.br").ifPresent(admin -> {
+                if (admin.getStore() == null) { admin.setStore(loja); users.save(admin); } // migração V6: admin antigo vira STORE_ADMIN da loja 1
                 if (!encoder.matches(adminPassword, admin.getPasswordHash())) {
                     admin.setPasswordHash(encoder.encode(adminPassword));
                     users.save(admin);
                 }
             });
         }
-        seedUser("Cliente Demonstração", "cliente@pratoja.com.br", "(11) 98888-2000", "Cliente@123", DomainTypes.Role.CUSTOMER);
+        // PLATFORM_ADMIN só é criado se a env existir (não quebra o boot sem ela).
+        final String platformPassword = System.getenv("PRATOJA_PLATFORM_ADMIN_PASSWORD");
+        if (platformPassword != null && !platformPassword.isBlank())
+            seedUser("Plataforma", "platform@pratoja.com.br", "(11) 99999-0000", platformPassword, DomainTypes.Role.PLATFORM_ADMIN, null);
+        seedUser("Cliente Demonstração", "cliente@pratoja.com.br", "(11) 98888-2000", "Cliente@123", DomainTypes.Role.CUSTOMER, null);
         if (categories.count() > 0) return;
-        Category pratos = category("Pratos executivos", 1); Category lanches = category("Lanches", 2); Category bebidas = category("Bebidas", 3); Category monte = category("Monte seu prato", 0);
+        Category pratos = category(loja, "Pratos executivos", 1); Category lanches = category(loja, "Lanches", 2); Category bebidas = category(loja, "Bebidas", 3); Category monte = category(loja, "Monte seu prato", 0);
         product(pratos, "Frango grelhado da casa", "File de frango suculento, arroz, feijao e salada fresca.", "32.90", "/images/frango.jpg", true, false);
         product(pratos, "Bife acebolado", "Bife macio com cebolas douradas, arroz soltinho, feijao e fritas.", "38.90", "/images/bife.jpg", true, false);
         product(pratos, "Parmegiana artesanal", "Frango empanado, molho de tomate, mucarela, arroz e batatas rusticas.", "41.90", "/images/parmegiana.jpg", false, false);
@@ -51,17 +59,25 @@ public class DataSeeder implements CommandLineRunner {
         addGroup(custom, DomainTypes.OptionType.BEVERAGE, "Bebida", 0, 1, 5, List.of(new Opt("Água mineral", "4"), new Opt("Refrigerante lata", "6"), new Opt("Suco natural", "9")));
     }
 
-    private void seedUser(String name, String email, String phone, String password, DomainTypes.Role role) {
-        if (users.existsByEmailIgnoreCase(email)) return;
-        User u = new User(); u.setName(name); u.setEmail(email); u.setPhone(phone); u.setPasswordHash(encoder.encode(password)); u.setRole(role); users.save(u);
+    /** Fallback defensivo: só usado se a loja migrada pela V6 não existir (nunca deve ocorrer após Flyway). */
+    private Store defaultStore() {
+        Store s = new Store();
+        s.setSlug("restaurante"); s.setName("Restaurante"); s.setSlogan("Seu cardápio digital");
+        s.setDeliveryFee(new BigDecimal("6.00")); s.setBrandPrimary("#ef5b2a"); s.setBrandPrimaryDark("#d94717");
+        return stores.save(s);
     }
-    private Category category(String name, int order) { Category c = new Category(); c.setName(name); c.setSortOrder(order); return categories.save(c); }
+
+    private void seedUser(String name, String email, String phone, String password, DomainTypes.Role role, Store store) {
+        if (users.existsByEmailIgnoreCase(email)) return;
+        User u = new User(); u.setName(name); u.setEmail(email); u.setPhone(phone); u.setPasswordHash(encoder.encode(password)); u.setRole(role); u.setStore(store); users.save(u);
+    }
+    private Category category(Store store, String name, int order) { Category c = new Category(); c.setStore(store); c.setName(name); c.setSortOrder(order); return categories.save(c); }
     private Product product(Category c, String name, String desc, String price, String image, boolean featured, boolean custom) {
-        Product p = new Product(); p.setCategory(c); p.setName(name); p.setDescription(desc); p.setPrice(new BigDecimal(price)); p.setImagePath(image); p.setFeatured(featured); p.setCustomizable(custom); return products.save(p);
+        Product p = new Product(); p.setStore(c.getStore()); p.setCategory(c); p.setName(name); p.setDescription(desc); p.setPrice(new BigDecimal(price)); p.setImagePath(image); p.setFeatured(featured); p.setCustomizable(custom); return products.save(p);
     }
     private record Opt(String name, String price) {}
     private void addGroup(Product product, DomainTypes.OptionType type, String name, int min, int max, int sort, List<Opt> values) {
-        OptionGroup g = new OptionGroup(); g.setProduct(product); g.setType(type); g.setName(name); g.setMinSelections(min); g.setMaxSelections(max); g.setSortOrder(sort); groups.save(g);
+        OptionGroup g = new OptionGroup(); g.setProduct(product); g.setStore(product.getStore()); g.setType(type); g.setName(name); g.setMinSelections(min); g.setMaxSelections(max); g.setSortOrder(sort); groups.save(g);
         int i=0; for (Opt value : values) { ProductOption o = new ProductOption(); o.setGroup(g); o.setName(value.name); o.setPriceDelta(new BigDecimal(value.price)); o.setSortOrder(++i); options.save(o); }
     }
 }

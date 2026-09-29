@@ -3,7 +3,7 @@ package br.com.pratoja.pratoja.domain;
 public final class DomainTypes {
     private DomainTypes() {}
 
-    public enum Role { CUSTOMER, ADMIN }
+    public enum Role { CUSTOMER, STORE_ADMIN, PLATFORM_ADMIN }
     public enum OptionType { BASE, PROTEIN, SIDE, EXTRA, BEVERAGE }
     public enum FulfillmentType { DELIVERY, PICKUP }
     public enum PaymentMethod { PIX, CARD, CASH }

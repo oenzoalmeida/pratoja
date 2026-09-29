@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 public class Product {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "category_id") private Category category;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "store_id") private Store store;
     @Column(nullable = false, length = 120) private String name;
     @Column(nullable = false, length = 600) private String description;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal price;

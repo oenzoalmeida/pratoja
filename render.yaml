@@ -14,6 +14,9 @@ services:
       # Segredo: o valor é informado no painel do Render (nunca versionado).
       - key: PRATOJA_ADMIN_PASSWORD
         sync: false
+      # Opcional: cria o PLATFORM_ADMIN no boot quando definida (painel /platform na Fase 5).
+      - key: PRATOJA_PLATFORM_ADMIN_PASSWORD
+        sync: false
       # Banco persistente PostgreSQL (Supabase free). Profile postgres = application-postgres.properties.
       - key: SPRING_PROFILES_ACTIVE
         value: postgres

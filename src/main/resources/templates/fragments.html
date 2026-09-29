@@ -18,7 +18,7 @@
     <a class="cart-link" href="/carrinho" aria-label="Abrir sacola"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span><strong data-cart-count>0</strong></a>
     <a sec:authorize="isAnonymous()" class="btn btn-outline" href="/login"><svg th:replace="~{fragments :: icon('user','')}"></svg>Entrar</a>
     <a sec:authorize="hasRole('CUSTOMER')" class="avatar-link" href="/perfil" aria-label="Meu perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span sec:authentication="name">Conta</span></a>
-    <a sec:authorize="hasRole('ADMIN')" class="btn btn-dark" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg>Painel</a>
+    <a sec:authorize="hasAnyRole('STORE_ADMIN','PLATFORM_ADMIN')" class="btn btn-dark" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg>Painel</a>
   </div>
 </header>
 
@@ -29,7 +29,7 @@
   <a href="/carrinho"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span></a>
   <a sec:authorize="isAnonymous()" href="/login"><svg th:replace="~{fragments :: icon('log-in','')}"></svg><span>Entrar</span></a>
   <a sec:authorize="hasRole('CUSTOMER')" href="/perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span>Perfil</span></a>
-  <a sec:authorize="hasRole('ADMIN')" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Painel</span></a>
+  <a sec:authorize="hasAnyRole('STORE_ADMIN','PLATFORM_ADMIN')" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Painel</span></a>
 </nav>
 
 <footer th:fragment="footer" class="footer"><div class="brand brand-light"><span class="brand-mark" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></div><p th:text="${store.slogan}">Seu cardápio digital</p><small>© <span th:text="${#temporals.year(#temporals.createToday())}">2026</span> <span th:text="${store.name}">Restaurante</span> · Plataforma PratoJá · <a th:href="@{/termos}">Termos de Uso</a> · <a th:href="@{/privacidade}">Política de Privacidade</a></small></footer>

@@ -24,7 +24,8 @@ public class SecurityConfig {
 
     @Bean AuthenticationSuccessHandler successHandler() {
         return (request, response, authentication) -> {
-            boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_" + DomainTypes.Role.ADMIN));
+            boolean admin = authentication.getAuthorities().stream().anyMatch(a ->
+                    a.getAuthority().equals("ROLE_" + DomainTypes.Role.STORE_ADMIN) || a.getAuthority().equals("ROLE_" + DomainTypes.Role.PLATFORM_ADMIN));
             response.sendRedirect(admin ? "/admin" : "/cardapio");
         };
     }
@@ -33,8 +34,9 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login", "/admin/login", "/cadastro", "/recuperar-senha", "/redefinir-senha", "/cardapio", "/produto/**", "/monte-seu-prato", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
-                .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/checkout", "/pedidos/**", "/historico", "/perfil/**", "/api/orders/**").hasAnyRole("CUSTOMER", "ADMIN")
+                .requestMatchers("/platform/**").hasRole("PLATFORM_ADMIN") // Fase 5: painel da plataforma (placeholder)
+                .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("STORE_ADMIN", "PLATFORM_ADMIN")
+                .requestMatchers("/checkout", "/pedidos/**", "/historico", "/perfil/**", "/api/orders/**").hasAnyRole("CUSTOMER", "STORE_ADMIN", "PLATFORM_ADMIN")
                 .anyRequest().permitAll())
             .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
                     .usernameParameter("email").passwordParameter("password")

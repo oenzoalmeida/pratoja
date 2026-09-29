@@ -12,6 +12,7 @@ public class Order {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Version private Long version;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "user_id") private User user;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "store_id") private Store store;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "address_id") private Address address;
     @Enumerated(EnumType.STRING) @Column(name = "fulfillment_type", nullable = false, length = 20) private DomainTypes.FulfillmentType fulfillmentType;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 30) private DomainTypes.OrderStatus status;

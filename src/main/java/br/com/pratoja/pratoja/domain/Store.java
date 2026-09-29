@@ -5,11 +5,12 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity @Table(name = "store_settings")
+/** Loja (tenant). Migrou da antiga store_settings singleton (V6) — id=1 é a loja legada. */
+@Entity @Table(name = "stores")
 @Getter @Setter @NoArgsConstructor
-public class StoreSettings {
-    public static final long SINGLETON_ID = 1L;
-    @Id private Long id;
+public class Store {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Column(nullable = false, unique = true, length = 80) private String slug;
     @Column(nullable = false, length = 120) private String name;
     @Column(length = 200) private String slogan;
     @Column(length = 600) private String description;
@@ -27,9 +28,11 @@ public class StoreSettings {
     @Column(name = "hero_title", length = 200) private String heroTitle;
     @Column(name = "hero_subtitle", length = 400) private String heroSubtitle;
     @Column(name = "delivery_time_note", length = 120) private String deliveryTimeNote;
-    @Column(name = "delivery_fee", nullable = false, precision = 10, scale = 2) private BigDecimal deliveryFee;
+    @Column(name = "delivery_fee", nullable = false, precision = 10, scale = 2) private BigDecimal deliveryFee = BigDecimal.ZERO;
     @Column(name = "brand_primary", length = 7) private String brandPrimary;
     @Column(name = "brand_primary_dark", length = 7) private String brandPrimaryDark;
     @Column(name = "logo_path", length = 300) private String logoPath;
+    @Column(nullable = false) private boolean active = true;
+    @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now();
     @Column(name = "updated_at") private LocalDateTime updatedAt;
 }

@@ -8,6 +8,7 @@ import lombok.*;
 public class OptionGroup {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "product_id") private Product product;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "store_id") private Store store;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private DomainTypes.OptionType type;
     @Column(nullable = false, length = 80) private String name;
     @Column(nullable = false) private Integer minSelections;

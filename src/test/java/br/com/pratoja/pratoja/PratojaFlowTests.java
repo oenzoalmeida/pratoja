@@ -15,7 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import br.com.pratoja.pratoja.service.StoreSettingsService;
+import br.com.pratoja.pratoja.repository.StoreRepository;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.mock.web.MockHttpSession;
 
@@ -34,11 +34,11 @@ class PratojaFlowTests {
     @Autowired AddressRepository addresses;
     @Autowired OrderRepository orders;
     @Autowired PasswordEncoder encoder;
-    @Autowired StoreSettingsService settingsService;
+    @Autowired StoreRepository stores;
 
     @Test
     void publicCatalogAndSearchAreAvailable() throws Exception {
-        var store = settingsService.getSettings();
+        var store = stores.findById(1L).orElseThrow();
         mvc.perform(get("/")).andExpect(status().isOk())
                 .andExpect(content().string(containsString(store.getName())));
         if (store.getSlogan() != null && !store.getSlogan().isBlank()) {
@@ -120,14 +120,14 @@ class PratojaFlowTests {
     }
 
     @Test
-    @WithMockUser(username = "admin@pratoja.com.br", roles = "ADMIN")
+    @WithMockUser(username = "admin@pratoja.com.br", roles = "STORE_ADMIN")
     void adminCanAccessDashboard() throws Exception {
         mvc.perform(get("/admin")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Visão geral")));
     }
 
     @Test
-    @WithMockUser(username = "admin@pratoja.com.br", roles = "ADMIN")
+    @WithMockUser(username = "admin@pratoja.com.br", roles = "STORE_ADMIN")
     void adminManagementViewsRender() throws Exception {
         mvc.perform(get("/admin/pedidos")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Gestão de pedidos")));
@@ -188,7 +188,7 @@ class PratojaFlowTests {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/pedidos/*/acompanhar"));
 
-        Order order = orders.findAllByOrderByCreatedAtDesc().get(0);
+        Order order = orders.findAllByStore_IdOrderByCreatedAtDesc(1L).get(0);
         mvc.perform(get("/pedidos/" + order.getId() + "/acompanhar").with(customerAuth))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Pedido recebido")))
@@ -196,7 +196,7 @@ class PratojaFlowTests {
                 .andExpect(content().string(containsString("Aguardando")));
 
         mvc.perform(post("/admin/pedidos/" + order.getId() + "/status")
-                        .with(user("admin@pratoja.com.br").roles("ADMIN")).with(csrf())
+                        .with(user("admin@pratoja.com.br").roles("STORE_ADMIN")).with(csrf())
                         .param("status", "CONFIRMED"))
                 .andExpect(status().is3xxRedirection());
     }
@@ -222,7 +222,7 @@ class PratojaFlowTests {
     }
 
     @Test
-    @WithMockUser(username = "admin@pratoja.com.br", roles = "ADMIN")
+    @WithMockUser(username = "admin@pratoja.com.br", roles = "STORE_ADMIN")
     void adminCanViewAndSaveStoreSettings() throws Exception {
         mvc.perform(get("/admin/configuracoes")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Configurações da loja")));

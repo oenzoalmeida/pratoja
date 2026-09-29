@@ -68,16 +68,19 @@ class PasswordRecoverySecurityTests {
     }
 
     // O DataSeeder de produção não cria admin sem PRATOJA_ADMIN_PASSWORD e o CI não define segredo externo:
-    // o teste provisiona a própria conta administrativa com senha fictícia, exclusiva deste teste.
+    // o teste reutiliza a conta administrativa quando ela já existe (compatível com a regra V8 de
+    // 1 STORE_ADMIN por loja no Postgres) e só provisiona a própria conta com senha fictícia caso contrário.
     private User createTestAdminAccount() {
-        User admin = new User();
-        admin.setName("Admin Somente Teste");
-        admin.setEmail(ADMIN_EMAIL);
-        admin.setPhone("(00) 90000-0000");
-        admin.setPasswordHash(encoder.encode(TEST_ONLY_ADMIN_PASSWORD));
-        admin.setRole(DomainTypes.Role.STORE_ADMIN);
-        admin.setStore(stores.findById(1L).orElseThrow());
-        return users.save(admin);
+        return users.findByEmailIgnoreCase(ADMIN_EMAIL).orElseGet(() -> {
+            User admin = new User();
+            admin.setName("Admin Somente Teste");
+            admin.setEmail(ADMIN_EMAIL);
+            admin.setPhone("(00) 90000-0000");
+            admin.setPasswordHash(encoder.encode(TEST_ONLY_ADMIN_PASSWORD));
+            admin.setRole(DomainTypes.Role.STORE_ADMIN);
+            admin.setStore(stores.findById(1L).orElseThrow());
+            return users.save(admin);
+        });
     }
 
     @Test

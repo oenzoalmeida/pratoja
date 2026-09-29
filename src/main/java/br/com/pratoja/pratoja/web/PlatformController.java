@@ -119,15 +119,17 @@ public class PlatformController {
     }
 
     @PostMapping("/lojas/{id}/admins")
-    String createAdmin(@PathVariable Long id, @RequestParam String name, @RequestParam String email, @RequestParam String password, RedirectAttributes redirect) {
+    String createAdmin(@PathVariable Long id, @RequestParam String name, @RequestParam String email, @RequestParam String password, @RequestParam(required = false) String phone, RedirectAttributes redirect) {
         try {
             if (name == null || name.isBlank()) throw new IllegalArgumentException("Informe o nome do administrador.");
             String mail = email == null ? "" : email.strip().toLowerCase();
             if (!mail.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) throw new IllegalArgumentException("Informe um e-mail válido.");
             if (password == null || password.length() < 8) throw new IllegalArgumentException("A senha inicial deve ter ao menos 8 caracteres.");
             if (users.existsByEmailIgnoreCase(mail)) throw new IllegalArgumentException("Já existe um usuário com este e-mail.");
+            storeService.assertStoreAdminSlotFree(id); // regra V8: 1 STORE_ADMIN por loja (índice parcial no Postgres; validação em service cobre o H2)
             User u = new User();
             u.setName(name.strip()); u.setEmail(mail); u.setPasswordHash(encoder.encode(password));
+            u.setPhone(phone == null || phone.isBlank() ? "(00) 00000-0000" : phone.strip());
             u.setRole(DomainTypes.Role.STORE_ADMIN); u.setStore(storeService.byId(id));
             users.save(u);
             redirect.addFlashAttribute("success", "Administrador criado.");

@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 @Controller @RequestMapping("/admin") @RequiredArgsConstructor
 public class AdminController {
-    private final OrderRepository orders;private final OrderService orderService;private final ProductRepository products;private final CategoryRepository categories;private final OptionGroupRepository groups;private final ProductOptionRepository options;private final UserRepository users;private final RealtimeHub hub;private final StoreRepository stores;private final StoreService storeService;
+    private final OrderRepository orders;private final OrderService orderService;private final ProductRepository products;private final CategoryRepository categories;private final OptionGroupRepository groups;private final ProductOptionRepository options;private final UserRepository users;private final RealtimeHub hub;private final StoreRepository stores;private final StoreService storeService;private final CurrentUserService currentUser;
     @Value("${pratoja.upload-dir}")private String uploadDir;
 
     /** Loja em contexto = loja do admin logado. PLATFORM_ADMIN não tem loja -> 404 (exceto dashboard). */
@@ -39,7 +39,13 @@ public class AdminController {
     @PostMapping("/pedidos/{id}/status")String status(Authentication auth,@PathVariable Long id,@RequestParam DomainTypes.OrderStatus status,RedirectAttributes redirect){try{orderService.transitionInStore(id,store(auth),status,auth.getName());redirect.addFlashAttribute("success","Status atualizado.");}catch(IllegalArgumentException e){redirect.addFlashAttribute("error",e.getMessage());}return "redirect:/admin/pedidos/"+id;}
     @GetMapping("/clientes")String customers(Model m){m.addAttribute("customers",users.findByRoleOrderByNameAsc(DomainTypes.Role.CUSTOMER));return "admin/customers";}
     @GetMapping("/relatorios")String reports(Authentication auth,Model m){List<OrderView> delivered=orderService.all(store(auth)).stream().filter(o->o.status()==DomainTypes.OrderStatus.DELIVERED).toList();BigDecimal revenue=delivered.stream().map(OrderView::total).reduce(BigDecimal.ZERO,BigDecimal::add);m.addAttribute("orders",delivered);m.addAttribute("revenue",revenue);m.addAttribute("ticket",delivered.isEmpty()?BigDecimal.ZERO:revenue.divide(BigDecimal.valueOf(delivered.size()),2,java.math.RoundingMode.HALF_UP));Map<String,Integer> top=delivered.stream().flatMap(o->o.items().stream()).collect(Collectors.toMap(OrderView.Item::name,OrderView.Item::quantity,Integer::sum));m.addAttribute("top",top.entrySet().stream().sorted(Map.Entry.<String,Integer>comparingByValue().reversed()).limit(5).toList());return "admin/reports";}
-    @GetMapping(value="/pedidos/events",produces=MediaType.TEXT_EVENT_STREAM_VALUE)@ResponseBody SseEmitter events(){return hub.subscribeAdmin();}
+    /** SSE do painel: resolve a loja da sessão. STORE_ADMIN recebe apenas eventos da própria loja;
+     *  PLATFORM_ADMIN (sem loja) recebe eventos de todas — papel de monitoria da plataforma. */
+    @GetMapping(value="/pedidos/events",produces=MediaType.TEXT_EVENT_STREAM_VALUE)@ResponseBody SseEmitter events(Authentication auth){
+        var u=currentUser.require(auth);
+        if(u.getRole()==DomainTypes.Role.PLATFORM_ADMIN)return hub.subscribePlatformAdmin();
+        return hub.subscribeAdmin(storeService.adminStore(u).getId());
+    }
     @GetMapping("/configuracoes")String settings(Authentication auth,Model m){m.addAttribute("settings",store(auth));return "admin/settings";}
     @PostMapping("/configuracoes")String saveSettings(Authentication auth,@RequestParam String name,@RequestParam(required=false)String slogan,@RequestParam(required=false)String description,@RequestParam(required=false)String phone,@RequestParam(required=false)String whatsapp,@RequestParam(required=false)String email,@RequestParam(required=false)String addressStreet,@RequestParam(required=false)String addressNumber,@RequestParam(required=false)String addressComplement,@RequestParam(required=false)String addressNeighborhood,@RequestParam(required=false)String addressCity,@RequestParam(required=false)String addressState,@RequestParam(required=false)String addressZip,@RequestParam(required=false)String openingHours,@RequestParam(required=false)String heroTitle,@RequestParam(required=false)String heroSubtitle,@RequestParam(required=false)String deliveryTimeNote,@RequestParam BigDecimal deliveryFee,@RequestParam(required=false)String brandPrimary,@RequestParam(required=false)String brandPrimaryDark,@RequestParam(required=false)String logoPath,RedirectAttributes redirect){
         try{

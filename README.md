@@ -8,6 +8,8 @@ Sistema web responsivo de delivery para restaurante, desenvolvido para demonstra
 
 ## Credencial demo
 
+> **Nota:** as credenciais abaixo são públicas para fins de demonstração; os dados da conta demo podem ser alterados por outros visitantes.
+
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Cliente | `cliente@pratoja.com.br` | `Cliente@123` |

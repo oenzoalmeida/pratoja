@@ -1,0 +1,47 @@
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${store.name}+' — Plataforma'">Loja</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
+<body><div class="admin-shell"><aside th:replace="~{platform/fragments :: sidebar('stores')}"></aside><main class="admin-main">
+<header class="admin-top"><div><span class="eyebrow">Plataforma · <span th:text="${store.active} ? 'Ativa' : 'Inativa'"></span></span><h1 th:text="${store.name}"></h1></div>
+<div><a class="btn btn-ghost" th:href="@{/loja/{slug}(slug=${store.slug})}" target="_blank"><svg th:replace="~{fragments :: icon('eye','')}"></svg>Ver loja</a>
+<form th:action="@{/platform/lojas/{id}/status(id=${store.id})}" method="post" style="display:inline" data-confirm="Confirma alterar o status desta loja? O público em /loja/{slug} fica indisponível quando desativada; os dados são preservados."><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-dark" th:text="${store.active} ? 'Desativar loja' : 'Ativar loja'"></button></form></div></header>
+<div class="alert success" th:if="${success}"><svg th:replace="~{fragments :: icon('circle-check','')}"></svg><span th:text="${success}"></span></div><div class="alert error" th:if="${error}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span th:text="${error}"></span></div>
+
+<section class="panel" style="margin-bottom:24px"><div class="panel-heading"><span class="heading-icon"><svg th:replace="~{fragments :: icon('pencil','')}"></svg></span><div><small>Dados da loja</small><h2>Editar</h2></div></div>
+<form th:action="@{/platform/lojas/{id}/editar(id=${store.id})}" method="post" class="admin-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+<label>Nome<input name="name" required minlength="2" maxlength="120" th:value="${store.name}"></label>
+<label>Slug<input name="slug" required maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" th:value="${store.slug}"></label>
+<label>Taxa de entrega (R$)<input type="number" name="deliveryFee" required step="0.01" min="0" th:value="${store.deliveryFee}"></label>
+<label>Slogan<input name="slogan" maxlength="200" th:value="${store.slogan}"></label>
+<label class="span-2">Descrição<textarea name="description" maxlength="600" th:text="${store.description}"></textarea></label>
+<label>Telefone<input name="phone" maxlength="30" th:value="${store.phone}"></label>
+<label>WhatsApp<input name="whatsapp" maxlength="30" th:value="${store.whatsapp}"></label>
+<label>E-mail<input type="email" name="email" maxlength="120" th:value="${store.email}"></label>
+<label>Logotipo (caminho)<input name="logoPath" maxlength="300" th:value="${store.logoPath}"></label>
+<label>Logradouro<input name="addressStreet" maxlength="150" th:value="${store.addressStreet}"></label>
+<label>Número<input name="addressNumber" maxlength="20" th:value="${store.addressNumber}"></label>
+<label>Complemento<input name="addressComplement" maxlength="100" th:value="${store.addressComplement}"></label>
+<label>Bairro<input name="addressNeighborhood" maxlength="100" th:value="${store.addressNeighborhood}"></label>
+<label>Cidade<input name="addressCity" maxlength="100" th:value="${store.addressCity}"></label>
+<label>UF<input name="addressState" maxlength="2" th:value="${store.addressState}"></label>
+<label>CEP<input name="addressZip" maxlength="20" th:value="${store.addressZip}"></label>
+<label class="span-2">Horário de funcionamento<textarea name="openingHours" th:text="${store.openingHours}"></textarea></label>
+<label>Título da home<input name="heroTitle" maxlength="200" th:value="${store.heroTitle}"></label>
+<label>Tempo de entrega (nota)<input name="deliveryTimeNote" maxlength="120" th:value="${store.deliveryTimeNote}"></label>
+<label class="span-2">Subtítulo da home<textarea name="heroSubtitle" maxlength="400" th:text="${store.heroSubtitle}"></textarea></label>
+<label>Cor principal<input name="brandPrimary" maxlength="7" th:value="${store.brandPrimary}" pattern="^#[0-9a-fA-F]{6}$"></label>
+<label>Cor principal (escura)<input name="brandPrimaryDark" maxlength="7" th:value="${store.brandPrimaryDark}" pattern="^#[0-9a-fA-F]{6}$"></label>
+<div class="span-2 form-actions"><a class="btn btn-ghost" th:href="@{/platform}">Cancelar</a><button class="btn btn-primary btn-lg"><svg th:replace="~{fragments :: icon('save','')}"></svg>Salvar</button></div>
+</form></section>
+
+<section class="panel"><div class="panel-heading"><span class="heading-icon"><svg th:replace="~{fragments :: icon('users','')}"></svg></span><div><small>Equipe</small><h2>Administradores da loja</h2></div></div>
+<div class="table-wrap responsive-table"><table class="data-table"><thead><tr><th>Nome</th><th>E-mail</th><th>Status</th><th>Ações</th></tr></thead>
+<tbody><tr th:each="a:${admins}"><td data-label="Nome" th:text="${a.name}"></td><td data-label="E-mail" th:text="${a.email}"></td>
+<td data-label="Status"><span class="status-pill" th:text="${a.active} ? 'Ativo' : 'Desativado'"></span></td>
+<td data-label="Ações"><form th:if="${a.active}" th:action="@{/platform/admins/{id}/desativar(id=${a.id})}" method="post" data-confirm="Desativar este administrador? Ele não poderá mais entrar; o usuário é preservado."><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-ghost">Desativar</button></form></td>
+</tr><tr class="table-empty" th:if="${admins.empty}"><td colspan="4">Nenhum administrador vinculado.</td></tr></tbody></table></div>
+<form th:action="@{/platform/lojas/{id}/admins(id=${store.id})}" method="post" class="admin-form" style="margin-top:16px"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+<label>Nome<input name="name" required maxlength="120"></label>
+<label>E-mail<input type="email" name="email" required maxlength="120"></label>
+<label>Senha inicial<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+<div class="span-2 form-actions"><button class="btn btn-primary"><svg th:replace="~{fragments :: icon('plus','')}"></svg>Criar administrador</button></div>
+</form></section>
+</main></div></body></html>

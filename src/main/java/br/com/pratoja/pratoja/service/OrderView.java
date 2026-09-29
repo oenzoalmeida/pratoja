@@ -24,7 +24,9 @@ public record OrderView(
         List<Item> items,
         List<Step> history,
         boolean canReview,
-        boolean reviewed
+        boolean reviewed,
+        String storeSlug,
+        String storeName
 ) {
     public record Item(String name, int quantity, BigDecimal unitPrice, BigDecimal total, String notes, List<String> options) {}
     public record Step(DomainTypes.OrderStatus status, LocalDateTime at) {}

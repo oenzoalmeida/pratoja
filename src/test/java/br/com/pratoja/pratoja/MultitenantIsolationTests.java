@@ -1,6 +1,7 @@
 package br.com.pratoja.pratoja;
 
 import br.com.pratoja.pratoja.domain.*;
+import br.com.pratoja.pratoja.cart.CartLine;
 import br.com.pratoja.pratoja.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,11 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Fases 1-3: isolamento multitenant. Uma segunda loja é criada nos testes e um STORE_ADMIN
@@ -32,6 +38,9 @@ class MultitenantIsolationTests {
     @Autowired ProductRepository products;
     @Autowired OrderRepository orders;
     @Autowired PasswordEncoder encoder;
+    @Autowired br.com.pratoja.pratoja.service.OrderService orderService;
+    @Autowired br.com.pratoja.pratoja.cart.SessionCart cart;
+    @Autowired br.com.pratoja.pratoja.cart.CartService cartService;
 
     private record Fixture(Store store2, Category cat2, Product prod2, User admin1, User admin2) {}
 
@@ -127,8 +136,143 @@ class MultitenantIsolationTests {
         Fixture f = fixture();
         // STORE_ADMIN não acessa /platform (Fase 5); acesso negado redireciona
         mvc.perform(get("/platform").with(user(f.admin1().getEmail()).roles("STORE_ADMIN")))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/?acesso-negado"));
+        mvc.perform(get("/platform").with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/?acesso-negado"));
         // Anônimo é redirecionado para o login
+        mvc.perform(get("/platform")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/admin")).andExpect(status().is3xxRedirection());
+        // PLATFORM_ADMIN acessa o painel
+        User plat = platformAdmin();
+        mvc.perform(get("/platform").with(user(plat.getEmail()).roles("PLATFORM_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Lojas")));
+    }
+
+    @Test
+    void inactiveStoreIsUnavailableOnPublicRoutes() throws Exception {
+        Fixture f = fixture();
+        Store s2 = stores.findById(f.store2().getId()).orElseThrow();
+        boolean wasActive = s2.isActive();
+        try {
+            s2.setActive(false); stores.save(s2);
+            mvc.perform(get("/loja/loja-teste-2")).andExpect(status().isNotFound());
+            mvc.perform(get("/loja/loja-teste-2/cardapio")).andExpect(status().isNotFound());
+            mvc.perform(get("/loja/loja-teste-2/api/cart")).andExpect(status().isNotFound());
+        } finally {
+            s2.setActive(wasActive); stores.save(s2);
+        }
+        // Reativada, volta a ficar disponível
+        mvc.perform(get("/loja/loja-teste-2")).andExpect(status().isOk());
+    }
+
+    @Test
+    void cartIsScopedPerStore() throws Exception {
+        Long sid1 = 1L, sid2 = stores.findBySlug("loja-teste-2").orElseThrow().getId();
+        cart.clear(sid1); cart.clear(sid2);
+        // Item da loja 1 adicionado na sacola da loja 1 (via API da loja)
+        mvc.perform(post("/loja/restaurante/api/cart/items").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"productId\":1,\"quantity\":1,\"optionIds\":[],\"notes\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"count\":1")));
+        // A sacola da loja 2 continua vazia (e adicionar o produto da loja 1 nela falha)
+        mvc.perform(get("/loja/loja-teste-2/api/cart"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"count\":0")));
+        mvc.perform(post("/loja/loja-teste-2/api/cart/items").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"productId\":1,\"quantity\":1,\"optionIds\":[],\"notes\":\"\"}"))
+                .andExpect(status().isBadRequest());
+        cart.clear(sid1); cart.clear(sid2);
+    }
+
+    @Test
+    void placeWithProductFromAnotherStoreIsRejected() {
+        var f = fixture();
+        Long sid1 = 1L, sid2 = f.store2().getId();
+        cart.clear(sid2);
+        // Linha montada com produto da loja 1, injetada na sacola da loja 2 (cenário adversarial)
+        CartLine line = cartService.create(sid1, 1L, 1, java.util.List.of(), "");
+        cart.add(sid2, line);
+        var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("cliente@pratoja.com.br", "n/a", java.util.List.of());
+        assertThrows(SecurityException.class, () ->
+                orderService.place(auth, stores.findById(sid2).orElseThrow(), "PICKUP", null, "PIX", null, null));
+        cart.clear(sid2);
+    }
+
+    @Test
+    void trackingAndRepeatRequireStoreCoherentRoute() throws Exception {
+        // Pedido do cliente na loja 1
+        User cliente = users.findByEmailIgnoreCase("cliente@pratoja.com.br").orElseThrow();
+        Order o1 = new Order();
+        o1.setStore(stores.findById(1L).orElseThrow()); o1.setUser(cliente);
+        o1.setFulfillmentType(DomainTypes.FulfillmentType.PICKUP); o1.setStatus(DomainTypes.OrderStatus.RECEIVED);
+        o1.setSubtotal(new BigDecimal("9.90")); o1.setDeliveryFee(BigDecimal.ZERO); o1.setTotal(new BigDecimal("9.90"));
+        Payment pay = new Payment(); pay.setOrder(o1); pay.setMethod(DomainTypes.PaymentMethod.PIX);
+        pay.setStatus(DomainTypes.PaymentStatus.CONFIRMED); o1.setPayment(pay);
+        o1 = orders.save(o1);
+        // Acessar o pedido da loja 1 pela rota da loja 2 -> 404
+        mvc.perform(get("/loja/loja-teste-2/pedidos/" + o1.getId() + "/acompanhar")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/loja/loja-teste-2/pedidos/" + o1.getId() + "/repetir")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")).with(csrf()))
+                .andExpect(status().isNotFound());
+        // Pela rota correta da loja 1, o dono acessa
+        mvc.perform(get("/loja/restaurante/pedidos/" + o1.getId() + "/acompanhar")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isOk());
+        // Cliente diferente não acessa (regra de dono mantida)
+        mvc.perform(get("/loja/restaurante/pedidos/" + o1.getId() + "/acompanhar")
+                        .with(user("admin1-mt@example.com").roles("STORE_ADMIN")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void store2AdminDoesNotSeeStore1Orders() throws Exception {
+        Fixture f = fixture();
+        var store1Orders = orders.findAllByStore_IdOrderByCreatedAtDesc(1L);
+        var admin2 = user(f.admin2().getEmail()).roles("STORE_ADMIN");
+        var page = mvc.perform(get("/admin/pedidos").with(admin2))
+                .andExpect(status().isOk());
+        for (Order o1 : store1Orders) {
+            page.andExpect(content().string(not(containsString("#" + String.format("%04d", o1.getId())))));
+        }
+    }
+
+    @Test
+    void platformCreateStoreValidatesUniqueSlug() throws Exception {
+        User plat = platformAdmin();
+        var platUser = user(plat.getEmail()).roles("PLATFORM_ADMIN");
+        // Slug duplicado -> erro de validação (flash de erro), nenhuma loja criada
+        long before = stores.count();
+        mvc.perform(post("/platform/lojas").with(platUser).with(csrf())
+                        .param("name", "Outra Loja").param("slug", "restaurante"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/platform/lojas/nova"));
+        assertEquals(before, stores.count());
+        // Slug único -> loja criada (ativa por padrão)
+        mvc.perform(post("/platform/lojas").with(platUser).with(csrf())
+                        .param("name", "Loja Criada Via Platform").param("slug", "loja-criada-via-platform"))
+                .andExpect(status().is3xxRedirection());
+        Store created = stores.findBySlug("loja-criada-via-platform").orElseThrow();
+        assertTrue(created.isActive());
+        // Slug gerado do nome quando não informado
+        mvc.perform(post("/platform/lojas").with(platUser).with(csrf())
+                        .param("name", "Pizzaria do Bairro"))
+                .andExpect(status().is3xxRedirection());
+        assertTrue(stores.findBySlug("pizzaria-do-bairro").isPresent());
+    }
+
+    private User platformAdmin() {
+        return users.findByEmailIgnoreCase("platform-mt@example.com").orElseGet(() -> {
+            User u = new User(); u.setName("Plataforma MT"); u.setEmail("platform-mt@example.com");
+            u.setPhone("(11) 90000-0003"); u.setPasswordHash(encoder.encode("SenhaForte123"));
+            u.setRole(DomainTypes.Role.PLATFORM_ADMIN); u.setStore(null);
+            return users.save(u);
+        });
     }
 }

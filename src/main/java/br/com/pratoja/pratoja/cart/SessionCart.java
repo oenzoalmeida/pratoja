@@ -2,14 +2,33 @@ package br.com.pratoja.pratoja.cart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.*;
+
+/**
+ * Sacola em sessão POR LOJA (multitenant, Fase 4): cada loja tem sua própria CartState.
+ * O cliente pode manter sacolas separadas simultaneamente — trocar de loja não descarta a sacola da outra.
+ */
 @Component @SessionScope
 public class SessionCart implements Serializable {
-    private final List<CartLine> lines=new ArrayList<>(); private String notes="";
-    public List<CartLine> getLines(){return lines;} public String getNotes(){return notes;} public void setNotes(String n){notes=n==null?"":n.strip();}
-    public int count(){return lines.stream().mapToInt(CartLine::quantity).sum();} public BigDecimal subtotal(){return lines.stream().map(CartLine::total).reduce(BigDecimal.ZERO,BigDecimal::add);}
-    public void add(CartLine line){for(int i=0;i<lines.size();i++){CartLine old=lines.get(i);if(old.key().equals(line.key())){lines.set(i,new CartLine(old.key(),old.productId(),old.productName(),old.imagePath(),old.unitPrice(),Math.min(20,old.quantity()+line.quantity()),old.choices(),old.notes(),old.available()));return;}}lines.add(line);}
-    public void replace(String key,CartLine line){for(int i=0;i<lines.size();i++)if(lines.get(i).key().equals(key)){lines.set(i,line);return;}}
-    public void remove(String key){lines.removeIf(l->l.key().equals(key));} public void clear(){lines.clear();notes="";}
+    private final Map<Long, CartState> byStore = new HashMap<>();
+
+    private CartState state(Long storeId) { return byStore.computeIfAbsent(storeId, k -> new CartState()); }
+
+    public List<CartLine> getLines(Long storeId) { return state(storeId).getLines(); }
+    public String getNotes(Long storeId) { return state(storeId).getNotes(); }
+    public void setNotes(Long storeId, String n) { state(storeId).setNotes(n); }
+    public int count(Long storeId) { return state(storeId).count(); }
+    public java.math.BigDecimal subtotal(Long storeId) { return state(storeId).subtotal(); }
+    public void add(Long storeId, CartLine line) { state(storeId).add(line); }
+    public void replace(Long storeId, String key, CartLine line) { state(storeId).replace(key, line); }
+    public Optional<CartLine> find(Long storeId, String key) { return state(storeId).find(key); }
+    public void remove(Long storeId, String key) { state(storeId).remove(key); }
+    public void clear(Long storeId) { state(storeId).clear(); }
+
+    /** Fecha a sacola da loja: devolve as linhas e limpa o estado (usado no place()). */
+    public List<CartLine> drain(Long storeId) {
+        List<CartLine> lines = List.copyOf(state(storeId).getLines());
+        clear(storeId);
+        return lines;
+    }
 }

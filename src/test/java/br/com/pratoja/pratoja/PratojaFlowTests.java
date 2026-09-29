@@ -22,6 +22,7 @@ import org.springframework.mock.web.MockHttpSession;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,20 +40,27 @@ class PratojaFlowTests {
     @Test
     void publicCatalogAndSearchAreAvailable() throws Exception {
         var store = stores.findById(1L).orElseThrow();
-        mvc.perform(get("/")).andExpect(status().isOk())
+        // Rotas antigas redirecionam 301 para /loja/{slug}; "/" pode ser landing se houver 2+ lojas ativas
+        MvcResult root = mvc.perform(get("/")).andReturn();
+        int rootStatus = root.getResponse().getStatus();
+        assertTrue(rootStatus == 301 || rootStatus == 200, "esperado 301 (redirect) ou 200 (landing), veio " + rootStatus);
+        mvc.perform(get("/cardapio")).andExpect(status().isMovedPermanently())
+                .andExpect(redirectedUrl("/loja/" + store.getSlug() + "/cardapio"));
+
+        mvc.perform(get("/loja/" + store.getSlug())).andExpect(status().isOk())
                 .andExpect(content().string(containsString(store.getName())));
         if (store.getSlogan() != null && !store.getSlogan().isBlank()) {
-            mvc.perform(get("/")).andExpect(status().isOk())
+            mvc.perform(get("/loja/" + store.getSlug())).andExpect(status().isOk())
                     .andExpect(content().string(containsString(store.getSlogan())));
         }
         // Credito da plataforma permanece no rodape
-        mvc.perform(get("/")).andExpect(status().isOk())
+        mvc.perform(get("/loja/" + store.getSlug())).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Plataforma PratoJá")));
 
-        mvc.perform(get("/cardapio").param("q", "frango")).andExpect(status().isOk())
+        mvc.perform(get("/loja/" + store.getSlug() + "/cardapio").param("q", "frango")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Frango")));
-        mvc.perform(get("/produto/1")).andExpect(status().isOk());
-        mvc.perform(get("/monte-seu-prato")).andExpect(status().isOk());
+        mvc.perform(get("/loja/" + store.getSlug() + "/produto/1")).andExpect(status().isOk());
+        mvc.perform(get("/loja/" + store.getSlug() + "/monte-seu-prato")).andExpect(status().isOk());
     }
 
     @Test
@@ -71,7 +79,7 @@ class PratojaFlowTests {
                         .param("email", email)
                         .param("password", "Cliente@123"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/cardapio"));
+                .andExpect(redirectedUrl("/"));
     }
 
     @Test
@@ -86,7 +94,7 @@ class PratojaFlowTests {
 
     @Test
     void cartCanAddUpdateAndRemoveItems() throws Exception {
-        MvcResult added = mvc.perform(post("/api/cart/items").with(csrf())
+        MvcResult added = mvc.perform(post("/loja/restaurante/api/cart/items").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"productId\":1,\"quantity\":2,\"optionIds\":[],\"notes\":\"\"}"))
                 .andExpect(status().isOk())
@@ -97,11 +105,11 @@ class PratojaFlowTests {
         String body = added.getResponse().getContentAsString();
         String key = body.replaceFirst(".*\"key\":\"([^\"]+)\".*", "$1");
         MockHttpSession session = (MockHttpSession) added.getRequest().getSession(false);
-        mvc.perform(patch("/api/cart/items/" + key).with(csrf())
+        mvc.perform(patch("/loja/restaurante/api/cart/items/" + key).with(csrf())
                         .session(session)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":1}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
-        mvc.perform(delete("/api/cart/items/" + key).with(csrf()).session(session))
+        mvc.perform(delete("/loja/restaurante/api/cart/items/" + key).with(csrf()).session(session))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
     }
 
@@ -115,7 +123,7 @@ class PratojaFlowTests {
 
     @Test
     void anonymousIsRedirectedToLoginOnProtectedPages() throws Exception {
-        mvc.perform(get("/checkout")).andExpect(status().is3xxRedirection());
+        mvc.perform(get("/loja/restaurante/checkout")).andExpect(status().is3xxRedirection());
         mvc.perform(get("/historico")).andExpect(status().is3xxRedirection());
     }
 
@@ -173,23 +181,23 @@ class PratojaFlowTests {
         address = addresses.save(address);
 
         var customerAuth = user(customer.getEmail()).roles("CUSTOMER");
-        MvcResult added = mvc.perform(post("/api/cart/items").with(customerAuth).with(csrf())
+        MvcResult added = mvc.perform(post("/loja/restaurante/api/cart/items").with(customerAuth).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"productId\":1,\"quantity\":1,\"optionIds\":[],\"notes\":\"Sem cebola\"}"))
                 .andExpect(status().isOk()).andReturn();
         MockHttpSession session = (MockHttpSession) added.getRequest().getSession(false);
 
-        mvc.perform(post("/checkout").with(customerAuth).with(csrf()).session(session)
+        mvc.perform(post("/loja/restaurante/checkout").with(customerAuth).with(csrf()).session(session)
                         .param("fulfillment", "DELIVERY")
                         .param("addressId", address.getId().toString())
                         .param("paymentMethod", "CASH")
                         .param("changeFor", "100,00")
                         .param("notes", "Tocar a campainha"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("/pedidos/*/acompanhar"));
+                .andExpect(redirectedUrlPattern("/loja/restaurante/pedidos/*/acompanhar"));
 
         Order order = orders.findAllByStore_IdOrderByCreatedAtDesc(1L).get(0);
-        mvc.perform(get("/pedidos/" + order.getId() + "/acompanhar").with(customerAuth))
+        mvc.perform(get("/loja/restaurante/pedidos/" + order.getId() + "/acompanhar").with(customerAuth))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Pedido recebido")))
                 .andExpect(content().string(containsString("Saiu para entrega")))
@@ -216,7 +224,7 @@ class PratojaFlowTests {
         other.setRole(DomainTypes.Role.CUSTOMER);
         users.save(other);
 
-        mvc.perform(get("/pedidos/" + order.getId() + "/acompanhar")
+        mvc.perform(get("/loja/restaurante/pedidos/" + order.getId() + "/acompanhar")
                         .with(user(otherEmail).roles("CUSTOMER")))
                 .andExpect(status().isNotFound());
     }

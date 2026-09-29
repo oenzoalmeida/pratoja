@@ -47,14 +47,14 @@ O acesso administrativo é provisionado internamente e não possui credencial p�
 
 - **Cliente (CUSTOMER):** monta pedidos, acompanha o status, avalia e gerencia o próprio perfil; pode excluir a própria conta.
 - **Administrador da loja (STORE_ADMIN):** gerencia cardápio, pedidos, relatórios e as configurações da própria loja. Credencial definida por `PRATOJA_ADMIN_PASSWORD`.
-- **Administrador da plataforma (PLATFORM_ADMIN):** papel reservado ao operador da plataforma; painel `/platform` (em construção na Fase 5). Criado no boot apenas se `PRATOJA_PLATFORM_ADMIN_PASSWORD` estiver definida.
+- **Administrador da plataforma (PLATFORM_ADMIN):** operador da plataforma. Painel `/platform`: lista lojas (nome, slug, status, nº de produtos/pedidos/admins, taxa, criação), cria loja (slug gerado do nome e editável, com validação de unicidade), ativa/desativa loja (dados preservados; loja inativa fica indisponível em `/loja/{slug}`), edita dados básicos e gerencia STORE_ADMINs por loja (criação com senha inicial; desativação nunca deleta). É credencial da PLATAFORMA (não de restaurante): criado no boot apenas se `PRATOJA_PLATFORM_ADMIN_PASSWORD` estiver definida (e-mail fixo do seed: `platform@pratoja.com.br`). Não vê dados transacionais além de métricas agregadas.
 
 ## Multitenancy (Fases 1-3)
 
 - Cada entidade de operação (`categories`, `products`, `option_groups`, `orders`) possui `store_id`; `users.store_id` vincula o STORE_ADMIN à sua loja (NULL para clientes).
 - Toda consulta de backend é escopada por `store_id` (`findByIdAndStore_Id`, etc.); um STORE_ADMIN que tenta acessar objeto de outra loja recebe **404**.
 - Migração **V6** criou a tabela `stores` (migrando a antiga `store_settings` singleton, depois removida) com backfill da loja legada `restaurante` (id=1). **V7** (específico por banco) trocou a UNIQUE global de `categories.name` por `UNIQUE(store_id, name)`.
-- As páginas públicas ainda usam a loja única ativa como contexto; a rota pública por slug (`/loja/{slug}`) chega na Fase 4.
+- As páginas públicas vivem sob **`/loja/{slug}`** (Fase 4): home, cardápio, produto, monte-seu-prato, sacola, checkout, acompanhamento, repetir e avaliar resolvem a loja pelo slug (loja inexistente ou inativa → 404). A sacola em sessão é **por loja**. Rotas antigas sem slug redirecionam **301** para a loja única ativa; com 2+ lojas ativas, `/` lista as lojas ativas.
 
 ## Arquitetura / Estrutura
 

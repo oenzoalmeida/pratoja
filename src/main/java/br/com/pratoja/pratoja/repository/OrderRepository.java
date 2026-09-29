@@ -9,6 +9,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
     // Escopado por loja (multitenant)
     List<Order> findAllByStore_IdOrderByCreatedAtDesc(Long storeId);
+    long countByStore_Id(Long storeId);
     Optional<Order> findByIdAndStore_Id(Long id, Long storeId);
     long countByStore_IdAndCreatedAtBetween(Long storeId, LocalDateTime start, LocalDateTime end);
     long countByStore_IdAndStatus(Long storeId, DomainTypes.OrderStatus status);

@@ -130,7 +130,7 @@ class PasswordRecoverySecurityTests {
                 .andExpect(redirectedUrl("/login"));
             mvc.perform(post("/login").with(csrf()).param("email", DEMO_EMAIL).param("password", nova))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/cardapio"));
+                .andExpect(redirectedUrl("/"));
             mvc.perform(post("/login").with(csrf()).param("email", DEMO_EMAIL).param("password", SEEDED_DEMO_PASSWORD))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error"));

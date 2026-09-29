@@ -62,12 +62,16 @@ class MultitenantIsolationTests {
             p2.setDescription("Produto exclusivo da loja 2."); p2.setPrice(new BigDecimal("9.90"));
             p2 = products.save(p2);
         }
-        User a1 = users.findByEmailIgnoreCase("admin1-mt@example.com").orElseGet(() -> {
-            User u = new User(); u.setName("Admin Loja 1"); u.setEmail("admin1-mt@example.com");
-            u.setPhone("(11) 90000-0001"); u.setPasswordHash(encoder.encode("SenhaForte123"));
-            u.setRole(DomainTypes.Role.STORE_ADMIN); u.setStore(stores.findById(1L).orElseThrow());
-            return users.save(u);
-        });
+        // Admin da loja 1: reutiliza o admin provisionado (DataSeeder/testes) quando existir —
+        // compatível com a regra V8 de 1 STORE_ADMIN por loja (Postgres).
+        User a1 = users.findByEmailIgnoreCase("admin@pratoja.com.br")
+                .or(() -> users.findByEmailIgnoreCase("admin1-mt@example.com"))
+                .orElseGet(() -> {
+                    User u = new User(); u.setName("Admin Loja 1"); u.setEmail("admin1-mt@example.com");
+                    u.setPhone("(11) 90000-0001"); u.setPasswordHash(encoder.encode("SenhaForte123"));
+                    u.setRole(DomainTypes.Role.STORE_ADMIN); u.setStore(stores.findById(1L).orElseThrow());
+                    return users.save(u);
+                });
         User a2 = users.findByEmailIgnoreCase("admin2-mt@example.com").orElseGet(() -> {
             User u = new User(); u.setName("Admin Loja 2"); u.setEmail("admin2-mt@example.com");
             u.setPhone("(11) 90000-0002"); u.setPasswordHash(encoder.encode("SenhaForte123"));
@@ -205,6 +209,7 @@ class MultitenantIsolationTests {
 
     @Test
     void trackingAndRepeatRequireStoreCoherentRoute() throws Exception {
+        Fixture f = fixture();
         // Pedido do cliente na loja 1
         User cliente = users.findByEmailIgnoreCase("cliente@pratoja.com.br").orElseThrow();
         Order o1 = new Order();
@@ -227,7 +232,7 @@ class MultitenantIsolationTests {
                 .andExpect(status().isOk());
         // Cliente diferente não acessa (regra de dono mantida)
         mvc.perform(get("/loja/restaurante/pedidos/" + o1.getId() + "/acompanhar")
-                        .with(user("admin1-mt@example.com").roles("STORE_ADMIN")))
+                        .with(user(f.admin1().getEmail()).roles("STORE_ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
@@ -265,6 +270,46 @@ class MultitenantIsolationTests {
                         .param("name", "Pizzaria do Bairro"))
                 .andExpect(status().is3xxRedirection());
         assertTrue(stores.findBySlug("pizzaria-do-bairro").isPresent());
+    }
+
+    @Test
+    void cannotCreateSecondStoreAdminForSameStore() throws Exception {
+        Fixture f = fixture();
+        User plat = platformAdmin();
+        var platUser = user(plat.getEmail()).roles("PLATFORM_ADMIN");
+        // A loja 1 já tem um STORE_ADMIN (regra V8: 1 por loja) -> criação é recusada com erro.
+        long adminsBefore = users.findByStore_IdOrderByNameAsc(1L).stream()
+                .filter(u -> u.getRole() == DomainTypes.Role.STORE_ADMIN).count();
+        mvc.perform(post("/platform/lojas/1/admins").with(platUser).with(csrf())
+                        .param("name", "Segundo Admin").param("email", "admin2-extra@example.com")
+                        .param("password", "SenhaForte123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/platform/lojas/1"));
+        long adminsAfter = users.findByStore_IdOrderByNameAsc(1L).stream()
+                .filter(u -> u.getRole() == DomainTypes.Role.STORE_ADMIN).count();
+        assertEquals(adminsBefore, adminsAfter, "não pode haver 2 STORE_ADMINs na mesma loja");
+        assertTrue(users.findByEmailIgnoreCase("admin2-extra@example.com").isEmpty());
+        // Loja sem admin (criada agora) aceita 1 admin — e recusa o 2º.
+        Store s3 = stores.findBySlug("loja-sem-admin").orElseGet(() -> {
+            Store s = new Store(); s.setSlug("loja-sem-admin"); s.setName("Loja Sem Admin"); s.setDeliveryFee(new BigDecimal("4.00"));
+            return stores.save(s);
+        });
+        mvc.perform(post("/platform/lojas/" + s3.getId() + "/admins").with(platUser).with(csrf())
+                        .param("name", "Admin Loja 3").param("email", "admin3@example.com")
+                        .param("password", "SenhaForte123"))
+                .andExpect(status().is3xxRedirection());
+        assertTrue(users.findByEmailIgnoreCase("admin3@example.com").orElseThrow().getStore() != null);
+        mvc.perform(post("/platform/lojas/" + s3.getId() + "/admins").with(platUser).with(csrf())
+                        .param("name", "Admin Loja 3b").param("email", "admin3b@example.com")
+                        .param("password", "SenhaForte123"))
+                .andExpect(status().is3xxRedirection());
+        assertTrue(users.findByEmailIgnoreCase("admin3b@example.com").isEmpty(), "segundo admin da mesma loja deve ser recusado");
+    }
+
+    @Test
+    void adminSseEndpointRequiresAuthentication() throws Exception {
+        // Sem login: redireciona para o login (não expõe stream).
+        mvc.perform(get("/admin/pedidos/events")).andExpect(status().is3xxRedirection());
     }
 
     private User platformAdmin() {

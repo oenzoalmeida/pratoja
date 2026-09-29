@@ -19,6 +19,7 @@ import java.util.NoSuchElementException;
 @Service @RequiredArgsConstructor
 public class StoreService {
     private final StoreRepository stores;
+    private final br.com.pratoja.pratoja.repository.UserRepository users;
     private final CurrentUserService currentUser;
 
     /** Loja ativa pelo slug da rota /loja/{slug}; inexistente ou inativa -> 404. */
@@ -55,4 +56,15 @@ public class StoreService {
     }
 
     @Transactional(readOnly = true) public Store byId(Long id) { return stores.findById(id).orElseThrow(); }
+
+    /**
+     * Integridade STORE_ADMIN (regra da migration V8): no máximo 1 STORE_ADMIN por loja.
+     * Reforçada aqui em service (vale para H2, onde não há índice parcial) e, no PostgreSQL,
+     * também pelo unique index parcial users(store_id) WHERE role='STORE_ADMIN'.
+     */
+    @Transactional(readOnly = true)
+    public void assertStoreAdminSlotFree(Long storeId) {
+        if (users.existsByRoleAndStore_Id(DomainTypes.Role.STORE_ADMIN, storeId))
+            throw new IllegalArgumentException("Esta loja já possui um administrador. Desative o atual antes de criar outro.");
+    }
 }

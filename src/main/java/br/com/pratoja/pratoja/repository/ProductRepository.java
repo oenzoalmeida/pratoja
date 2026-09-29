@@ -11,6 +11,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths={"category","store"}) List<Product> findByStore_IdAndFeaturedTrueAndAvailableTrueAndArchivedFalseOrderByIdDesc(Long storeId);
     Optional<Product> findFirstByStore_IdAndCustomizableTrueAndArchivedFalse(Long storeId);
     long countByStore_IdAndArchivedFalse(Long storeId);
-    @EntityGraph(attributePaths={"category","store"}) @Query("select p from Product p where p.store.id=:store and p.archived=false and (:category is null or p.category.id=:category) and (:q is null or lower(p.name) like lower(concat('%',:q,'%')) or lower(p.description) like lower(concat('%',:q,'%'))) order by p.category.sortOrder,p.name")
+    // cast(:q as string): o JDBC envia null sem tipo (bytea no Postgres) e lower(bytea) não existe;
+    // o cast garante tipagem textual nos dois bancos (H2 e Postgres).
+    @EntityGraph(attributePaths={"category","store"}) @Query("select p from Product p where p.store.id=:store and p.archived=false and (:category is null or p.category.id=:category) and (cast(:q as string) is null or lower(p.name) like lower(concat('%',cast(:q as string),'%')) or lower(p.description) like lower(concat('%',cast(:q as string),'%'))) order by p.category.sortOrder,p.name")
     List<Product> searchInStore(@Param("store") Long store, @Param("q") String q, @Param("category") Long category);
 }

@@ -3,12 +3,25 @@
 <body>
 <svg th:fragment="icon(name, classes)" th:class="|icon ${classes}|" aria-hidden="true" focusable="false"><use th:href="|/images/lucide-sprite.svg#${name}|"></use></svg>
 
+<!-- Favicon e metas Open Graph da loja: consomem store.logoPath quando configurado (sem uploader);
+     fallbacks neutros da plataforma (favicon.svg / placeholder.jpg). -->
+<th:block th:fragment="storeHead">
+  <link rel="icon" th:href="${store != null and store.logoPath != null and !store.logoPath.isBlank()} ? ${store.logoPath} : '/favicon.svg'">
+  <th:block th:if="${store != null}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" th:content="${store.name}">
+    <meta property="og:title" th:content="${store.heroTitle != null and !store.heroTitle.isBlank()} ? ${store.heroTitle + ' — ' + store.name} : ${store.name}">
+    <meta property="og:description" th:content="${(store.description != null and !store.description.isBlank()) ? store.description : ((store.slogan != null and !store.slogan.isBlank()) ? store.slogan : 'Cardápio digital e pedidos online')}">
+    <meta property="og:image" th:content="${store.logoPath != null and !store.logoPath.isBlank()} ? ${store.logoPath} : '/images/placeholder.jpg'">
+  </th:block>
+</th:block>
+
 <!-- Cores configuráveis da loja: sobrescrevem as variáveis de :root do app.css quando preenchidas. -->
 <th:block th:fragment="brandStyle" th:if="${store.brandPrimary != null and !store.brandPrimary.isBlank()}"><style th:inline="text" th:if="${store.brandPrimaryDark != null and !store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];--orange-dark:[[${store.brandPrimaryDark}]];}</style><style th:inline="text" th:if="${store.brandPrimaryDark == null or store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];}</style></th:block>
 
 <header th:fragment="header" class="site-header" th:data-cart-base="@{/loja/{slug}/api/cart(slug=${store.slug})}">
   <th:block th:replace="~{fragments :: brandStyle}"></th:block>
-  <a class="brand" th:href="@{/loja/{slug}(slug=${store.slug})}" th:aria-label="|${store.name} — início|"><span class="brand-mark" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></a>
+  <a class="brand" th:href="@{/loja/{slug}(slug=${store.slug})}" th:aria-label="|${store.name} — início|"><img th:if="${store.logoPath != null and !store.logoPath.isBlank()}" class="brand-logo" th:src="${store.logoPath}" th:alt="${store.name}"><span class="brand-mark" th:if="${store.logoPath == null or store.logoPath.isBlank()}" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></a>
   <nav class="desktop-nav" aria-label="Navegação principal">
     <a th:href="@{/loja/{slug}(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('house','')}"></svg>Início</a>
     <a th:href="@{/loja/{slug}/cardapio(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('utensils','')}"></svg>Cardápio</a>

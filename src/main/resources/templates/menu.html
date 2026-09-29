@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="'Cardápio — '+${store.name}">Cardápio</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="'Cardápio — '+${store.name}">Cardápio</title><th:block th:replace="~{fragments :: storeHead}"></th:block><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
 <body><header th:replace="~{fragments :: header}"></header><main class="page-shell">
 <section class="page-intro"><span class="eyebrow">Escolha seu favorito</span><h1>Nosso cardápio</h1><p>Receitas preparadas na hora, com ingredientes frescos.</p></section>
 <form class="menu-tools" th:action="@{/loja/{slug}/cardapio(slug=${store.slug})}"><label class="search"><svg th:replace="~{fragments :: icon('search','')}"></svg><input name="q" th:value="${q}" placeholder="Buscar pratos, bebidas..." aria-label="Buscar produtos"></label><div class="chips" aria-label="Categorias"><a th:classappend="${selectedCategory == null} ? active" th:href="@{/loja/{slug}/cardapio(slug=${store.slug})}">Todos</a><a th:each="c:${categories}" th:classappend="${selectedCategory == c.id} ? active" th:href="@{/loja/{slug}/cardapio(slug=${store.slug},categoria=${c.id})}" th:text="${c.name}">Categoria</a></div></form>

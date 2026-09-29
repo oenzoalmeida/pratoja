@@ -1,6 +1,6 @@
 # PratoJá
 
-Sistema web responsivo de delivery para restaurante, desenvolvido para demonstração acadêmica. O cliente escolhe produtos, personaliza o prato, monta a sacola, finaliza o pedido e acompanha o status. A equipe administrativa gerencia cardápio, pedidos e relatórios.
+PratoJá é uma **plataforma de cardápio digital e delivery** para restaurantes. O restaurante cadastra a própria identidade (nome, slogan, contato, horários, cores, taxa de entrega) pelo painel administrativo, sem tocar em código — e recebe pedidos com personalização de pratos, checkout completo, acompanhamento em tempo real e relatórios.
 
 ## Demonstração
 
@@ -16,9 +16,12 @@ Sistema web responsivo de delivery para restaurante, desenvolvido para demonstra
 
 O acesso administrativo é provisionado internamente e não possui credencial pública.
 
-## Sobre / Objetivo
+## Como um restaurante configura a própria identidade
 
-Demonstrar um fluxo completo de delivery com autenticação, controle de acesso, carrinho, checkout, pedidos e painel administrativo em uma aplicação web única.
+1. Faça login no painel administrativo (`/admin`).
+2. Abra **Configurações da loja** no menu lateral.
+3. Preencha nome, slogan, descrição, telefone, WhatsApp, e-mail, endereço completo, horário de funcionamento, textos da página inicial (título, subtítulo e tempo de entrega), taxa de entrega e cores da marca (`#RRGGBB`).
+4. Salve: o site inteiro passa a exibir o nome e a identidade do restaurante — títulos das páginas, cabeçalho, rodapé, home e taxa de entrega do checkout — sem nenhum deploy ou alteração de código.
 
 ## Funcionalidades principais
 
@@ -28,7 +31,7 @@ Demonstrar um fluxo completo de delivery com autenticação, controle de acesso,
 - Cadastro, login, recuperação de senha simulada e perfil.
 - Endereços de entrega, checkout para entrega ou retirada e pagamentos simulados por PIX, cartão ou dinheiro.
 - Acompanhamento do pedido, histórico, repetir pedido e avaliação.
-- Painel ADMIN com dashboard, pedidos, alteração de status, produtos, categorias e relatórios.
+- Painel ADMIN com dashboard, pedidos, alteração de status, produtos, categorias, relatórios e configurações da loja.
 - Exclusão de conta pela interface (dados pessoais apagados; histórico anonimizado).
 - Termos de Uso e Política de Privacidade integrados à aplicação.
 
@@ -43,16 +46,16 @@ Demonstrar um fluxo completo de delivery com autenticação, controle de acesso,
 ## Perfis de acesso
 
 - **Cliente (CUSTOMER):** monta pedidos, acompanha o status, avalia e gerencia o próprio perfil; pode excluir a própria conta.
-- **Administrador (ADMIN):** gerencia cardápio, pedidos e relatórios. Credencial não pública.
+- **Administrador (ADMIN):** gerencia cardápio, pedidos, relatórios e as configurações da loja. Credencial não pública.
 
 ## Arquitetura / Estrutura
 
 ```text
 src/main/java/br/com/pratoja/pratoja/
 ├── config/       Security, seeding e inicialização
-├── domain/       Entidades JPA e tipos de domínio
+├── domain/       Entidades JPA e tipos de domínio (inclui StoreSettings)
 ├── repository/   Repositórios Spring Data
-├── service/      Regras de negócio (conta, pedidos, tempo real)
+├── service/      Regras de negócio (conta, pedidos, loja, tempo real)
 └── web/          Controllers MVC (loja, perfil, admin, carrinho, jurídico)
 src/main/resources/
 ├── db/migration/ Migrações Flyway
@@ -80,7 +83,7 @@ Acesse `http://localhost:8080`. Por padrão o projeto usa H2 em memória; para P
 
 ## Testes
 
-Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin) executados via Maven Wrapper e GitHub Actions:
+Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin, configurações da loja) executados via Maven Wrapper e GitHub Actions:
 
 ```bash
 ./mvnw test
@@ -99,6 +102,7 @@ Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin) 
 - A recuperação de senha não envia e-mail: em modo demonstração, o link é exibido na tela.
 - Sem rate limiting nas rotas de autenticação.
 - O e-mail da conta não é editável após o cadastro.
+- A plataforma é single-tenant: uma instância atende um restaurante por vez.
 
 ## Avisos específicos
 

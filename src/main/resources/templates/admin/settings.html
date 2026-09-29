@@ -1,0 +1,28 @@
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="'Configurações — Admin — '+${store.name}">Configurações</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/admin-ui.js"></script></head>
+<body><div class="admin-shell"><aside th:replace="~{admin/fragments :: sidebar('settings')}"></aside><main class="admin-main"><header class="admin-top"><div><span class="eyebrow">Identidade da loja</span><h1>Configurações da loja</h1></div><a class="back" href="/admin"><svg th:replace="~{fragments :: icon('arrow-left','')}"></svg>Voltar</a></header><div class="alert success" th:if="${success}"><svg th:replace="~{fragments :: icon('circle-check','')}"></svg><span th:text="${success}"></span></div><div class="alert error" th:if="${error}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span th:text="${error}"></span></div>
+<form action="/admin/configuracoes" method="post" class="admin-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+<label>Nome do restaurante<input name="name" required minlength="2" maxlength="120" th:value="${settings.name}" placeholder="Nome exibido no cardápio e nos pedidos"></label>
+<label>Slogan<input name="slogan" maxlength="200" th:value="${settings.slogan}" placeholder="Ex.: Comida caseira com entrega rápida"></label>
+<label class="span-2">Descrição<textarea name="description" maxlength="600" th:text="${settings.description}" placeholder="Texto usado na descrição da página inicial e em mecanismos de busca"></textarea></label>
+<label>Telefone<input name="phone" maxlength="30" th:value="${settings.phone}" placeholder="(11) 99999-9999"></label>
+<label>WhatsApp<input name="whatsapp" maxlength="30" th:value="${settings.whatsapp}" placeholder="(11) 99999-9999"></label>
+<label>E-mail<input type="email" name="email" maxlength="120" th:value="${settings.email}" placeholder="contato@seurestaurante.com.br"></label>
+<label>Logotipo (caminho)<input name="logoPath" maxlength="300" th:value="${settings.logoPath}" placeholder="/images/logo.png (opcional)"></label>
+<fieldset class="span-2 form-options"><legend>Endereço</legend>
+<label>Logradouro<input name="addressStreet" maxlength="150" th:value="${settings.addressStreet}" placeholder="Rua, avenida..."></label>
+<label>Número<input name="addressNumber" maxlength="20" th:value="${settings.addressNumber}" placeholder="100"></label>
+<label>Complemento<input name="addressComplement" maxlength="100" th:value="${settings.addressComplement}" placeholder="Sala, andar... (opcional)"></label>
+<label>Bairro<input name="addressNeighborhood" maxlength="100" th:value="${settings.addressNeighborhood}" placeholder="Centro"></label>
+<label>Cidade<input name="addressCity" maxlength="100" th:value="${settings.addressCity}" placeholder="São Paulo"></label>
+<label>UF<input name="addressState" maxlength="2" th:value="${settings.addressState}" placeholder="SP"></label>
+<label>CEP<input name="addressZip" maxlength="20" th:value="${settings.addressZip}" placeholder="01001-000"></label>
+</fieldset>
+<label class="span-2">Horário de funcionamento<textarea name="openingHours" th:text="${settings.openingHours}" placeholder="seg-sex 18h-23h&#10;sáb-dom 12h-23h"></textarea></label>
+<label>Título da página inicial<input name="heroTitle" maxlength="200" th:value="${settings.heroTitle}" placeholder="Título principal da home"></label>
+<label>Prova social / tempo de entrega<input name="deliveryTimeNote" maxlength="120" th:value="${settings.deliveryTimeNote}" placeholder="Entrega em 35–50 min"></label>
+<label class="span-2">Subtítulo da página inicial<textarea name="heroSubtitle" maxlength="400" th:text="${settings.heroSubtitle}" placeholder="Frase de apoio exibida abaixo do título da home"></textarea></label>
+<label>Taxa de entrega (R$)<input type="number" name="deliveryFee" required step="0.01" min="0" th:value="${settings.deliveryFee}" placeholder="0,00"></label>
+<label>Cor principal<input name="brandPrimary" maxlength="7" th:value="${settings.brandPrimary}" placeholder="#ef5b2a" pattern="^#[0-9a-fA-F]{6}$"></label>
+<label>Cor principal (escura)<input name="brandPrimaryDark" maxlength="7" th:value="${settings.brandPrimaryDark}" placeholder="#d94717" pattern="^#[0-9a-fA-F]{6}$"></label>
+<div class="span-2 form-actions"><a class="btn btn-ghost" href="/admin">Cancelar</a><button class="btn btn-primary btn-lg"><svg th:replace="~{fragments :: icon('save','')}"></svg>Salvar configurações</button></div></form>
+</main></div></body></html>

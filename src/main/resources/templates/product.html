@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${product.name}+' — PratoJá'">Produto</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${product.name}+' — '+${store.name}">Produto</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
 <body><header th:replace="~{fragments :: header}"></header><main class="page-shell">
 <a class="back" href="/cardapio"><svg th:replace="~{fragments :: icon('arrow-left','')}"></svg>Voltar ao cardápio</a>
 <section class="product-detail"><div class="detail-image"><img th:src="${product.imagePath}" th:alt="${product.name}" onerror="this.onerror=null;this.src='/images/placeholder.jpg'"><span th:if="${!product.available}" class="soldout"><svg th:replace="~{fragments :: icon('circle-x','')}"></svg>Indisponível</span></div>

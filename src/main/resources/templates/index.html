@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="PratoJá: comida de verdade, do seu jeito."><title>PratoJá — seu almoço, do seu jeito</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" th:content="${store.description}" content=""><title th:text="${store.heroTitle}+' — '+${store.name}">Início</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
 <body>
 <header th:replace="~{fragments :: header}"></header>
 <main>
   <div class="alert error" th:if="${param['acesso-negado'] != null}" style="max-width:1080px;margin:18px auto 0" role="alert"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg>Área restrita à equipe do restaurante. Faça login com um perfil ADMIN para acessar o painel.</div>
   <section class="hero">
-    <div class="hero-copy"><span class="eyebrow">Sabor que chega rápido</span><h1>Seu almoço,<br><em>do seu jeito.</em></h1><p>Pratos frescos, combinações personalizadas e aquele tempero de casa. Peça em poucos passos.</p>
+    <div class="hero-copy"><span class="eyebrow">Sabor que chega rápido</span><h1 th:text="${store.heroTitle}">Seu cardápio</h1><p th:text="${store.heroSubtitle}">Peça em poucos passos.</p>
       <div class="hero-actions"><a class="btn btn-primary btn-lg" href="/cardapio">Ver cardápio <svg th:replace="~{fragments :: icon('arrow-right','')}"></svg></a><a class="btn btn-ghost btn-lg" href="/monte-seu-prato"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg>Monte seu prato</a></div>
-      <div class="hero-proof"><span><svg th:replace="~{fragments :: icon('star','')}"></svg>4,9 de avaliação</span><span><svg th:replace="~{fragments :: icon('clock','')}"></svg>Entrega em 35–50 min</span></div>
+      <div class="hero-proof"><span><svg th:replace="~{fragments :: icon('clock','')}"></svg><span th:text="${store.deliveryTimeNote}">Entrega em 35–50 min</span></span></div>
     </div>
     <div class="hero-visual"><div class="plate"><img class="hero-dish" src="/images/monte.jpg" alt="Prato montado com ingredientes frescos"></div><div class="float-card"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span><strong>Feito na hora</strong><small>Ingredientes frescos todos os dias</small></span></div></div>
   </section>

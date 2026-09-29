@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 /**
  * Expõe a loja como atributo global "store" em todos os templates Thymeleaf.
  * - Em /admin/**: a loja do admin logado (STORE_ADMIN). PLATFORM_ADMIN cai no fallback.
- * - Demais páginas (públicas): fallback = loja única ativa. Quando a Fase 4 introduzir
- *   /loja/{slug}, este é o ponto de extensão para resolver a loja pela rota.
+ * - Em /loja/{slug}/**: a loja resolvida pela rota (active=true; inativa -> null, handlers devolvem 404).
+ * - Demais páginas: fallback = loja única ativa (compat).
  */
 @ControllerAdvice @RequiredArgsConstructor
 public class StoreAdvice {
@@ -22,7 +22,15 @@ public class StoreAdvice {
     private final StoreRepository stores;
 
     @ModelAttribute("store") public Store store(HttpServletRequest request, org.springframework.security.core.Authentication auth) {
-        if (auth != null && request != null && request.getRequestURI().startsWith("/admin")) {
+        if (request == null) return stores.findFirstByActiveTrueOrderByIdAsc().orElse(null);
+        String uri = request.getRequestURI();
+        // Fase 4: loja em contexto vem da rota /loja/{slug} (uma resolução por request).
+        if (uri.startsWith("/loja/")) {
+            String[] parts = uri.split("/");
+            if (parts.length > 2) return stores.findBySlug(parts[2]).filter(Store::isActive).orElse(null);
+            return null;
+        }
+        if (auth != null && uri.startsWith("/admin")) {
             try {
                 var user = currentUser.require(auth);
                 if (user.getStore() != null) {

@@ -10,8 +10,9 @@ import java.util.*;
 @Service @RequiredArgsConstructor
 public class CartService {
     private final ProductRepository products; private final OptionGroupRepository groups; private final ProductOptionRepository options;
-    @Transactional(readOnly=true) public CartLine create(Long productId,int quantity,List<Long> optionIds,String notes){
-        Product p=products.findById(productId).filter(x->!x.isArchived()).orElseThrow(()->new IllegalArgumentException("Produto não encontrado."));
+    /** Cria uma linha de sacola validando que produto e opções pertencem à loja em contexto (Fase 4). */
+    @Transactional(readOnly=true) public CartLine create(Long storeId,Long productId,int quantity,List<Long> optionIds,String notes){
+        Product p=products.findByIdAndStore_Id(productId,storeId).filter(x->!x.isArchived()).orElseThrow(()->new IllegalArgumentException("Produto não encontrado."));
         if(!p.isAvailable())throw new IllegalArgumentException("Este produto está indisponível."); if(quantity<1||quantity>20)throw new IllegalArgumentException("Quantidade inválida.");
         List<Long> ids=optionIds==null?List.of():optionIds.stream().distinct().toList(); List<ProductOption> selected=ids.isEmpty()?List.of():options.findByIdInAndAvailableTrue(ids);
         if(selected.size()!=ids.size()||selected.stream().anyMatch(o->!o.getGroup().getProduct().getId().equals(productId)))throw new IllegalArgumentException("Uma opção selecionada é inválida.");

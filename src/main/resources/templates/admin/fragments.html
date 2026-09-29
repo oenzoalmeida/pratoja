@@ -10,7 +10,7 @@
     <a href="/admin/clientes" th:classappend="${active=='customers'}?'active'"><svg th:replace="~{fragments :: icon('users','')}"></svg><span>Clientes</span></a>
     <a href="/admin/relatorios" th:classappend="${active=='reports'}?'active'"><svg th:replace="~{fragments :: icon('chart','')}"></svg><span>Relatórios</span></a>
     <a href="/admin/configuracoes" th:classappend="${active=='settings'}?'active'"><svg th:replace="~{fragments :: icon('pencil','')}"></svg><span>Configurações da loja</span></a>
-    <a href="/" target="_blank"><svg th:replace="~{fragments :: icon('eye','')}"></svg><span>Ver loja</span></a>
+    <a th:href="@{/loja/{slug}(slug=${store.slug})}" target="_blank"><svg th:replace="~{fragments :: icon('eye','')}"></svg><span>Ver loja</span></a>
   </nav>
   <form action="/logout" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-light full"><svg th:replace="~{fragments :: icon('log-out','')}"></svg>Sair</button></form>
 </aside>

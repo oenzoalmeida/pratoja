@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside th:fragment="sidebar(active)" class="admin-sidebar">
+  <a class="brand brand-light" href="/platform"><span class="brand-mark">P</span><span>PratoJá · Plataforma</span></a>
+  <nav aria-label="Navegação da plataforma">
+    <a href="/platform" th:classappend="${active=='stores'}?'active'"><svg th:replace="~{fragments :: icon('store','')}"></svg><span>Lojas</span></a>
+    <a href="/platform/lojas/nova" th:classappend="${active=='new'}?'active'"><svg th:replace="~{fragments :: icon('plus','')}"></svg><span>Nova loja</span></a>
+  </nav>
+  <div style="margin-top:auto"><a class="btn btn-ghost" href="/" style="width:100%"><svg th:replace="~{fragments :: icon('house','')}"></svg>Site público</a></div>
+</aside>
+</body>
+</html>

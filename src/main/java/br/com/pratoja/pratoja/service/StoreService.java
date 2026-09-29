@@ -8,21 +8,36 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
 /**
- * Resolução de contexto de loja (tenant) durante as Fases 1-3.
- * Fase 4 introduzirá rotas públicas por slug (/loja/{slug}); até lá as páginas públicas
- * e o checkout usam a loja única ativa como contexto padrão — este método é o ponto de extensão.
+ * Resolução de contexto de loja (tenant).
+ * Fase 4: as páginas públicas vivem sob /loja/{slug} e resolvem a loja pela rota (active=true obrigatório;
+ * loja inativa -> 404). O fallback de loja única ativa permanece apenas para compatibilidade/redirecionamentos.
  */
 @Service @RequiredArgsConstructor
 public class StoreService {
     private final StoreRepository stores;
     private final CurrentUserService currentUser;
 
-    /** Loja única ativa (contexto padrão enquanto não há rota por slug — ver comentário de classe). */
+    /** Loja ativa pelo slug da rota /loja/{slug}; inexistente ou inativa -> 404. */
+    @Transactional(readOnly = true)
+    public Store activeBySlug(String slug) {
+        return stores.findBySlug(slug).filter(Store::isActive).orElseThrow(NoSuchElementException::new);
+    }
+
+    /** Loja única ativa — usado só para redirecionar rotas antigas (301) quando existe exatamente 1 loja ativa. */
     @Transactional(readOnly = true)
     public Store singleActive() {
         return stores.findFirstByActiveTrueOrderByIdAsc().orElseThrow();
     }
+
+    @Transactional(readOnly = true)
+    public List<Store> activeStores() { return stores.findAll().stream().filter(Store::isActive).toList(); }
+
+    @Transactional(readOnly = true)
+    public long countActive() { return activeStores().size(); }
 
     /** Loja do admin logado; PLATFORM_ADMIN não tem loja própria (SecurityException -> 404). */
     @Transactional(readOnly = true)

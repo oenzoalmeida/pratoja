@@ -26,15 +26,17 @@ public class SecurityConfig {
         return (request, response, authentication) -> {
             boolean admin = authentication.getAuthorities().stream().anyMatch(a ->
                     a.getAuthority().equals("ROLE_" + DomainTypes.Role.STORE_ADMIN) || a.getAuthority().equals("ROLE_" + DomainTypes.Role.PLATFORM_ADMIN));
-            response.sendRedirect(admin ? "/admin" : "/cardapio");
+            response.sendRedirect(admin ? "/admin" : "/");
         };
     }
 
     @Bean SecurityFilterChain security(HttpSecurity http, AuthenticationSuccessHandler successHandler) throws Exception {
         http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/admin/login", "/cadastro", "/recuperar-senha", "/redefinir-senha", "/cardapio", "/produto/**", "/monte-seu-prato", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
-                .requestMatchers("/platform/**").hasRole("PLATFORM_ADMIN") // Fase 5: painel da plataforma (placeholder)
+                // Páginas autenticadas sob /loja/{slug} (checkout, pedidos, SSE) ANTES do permitAll amplo
+                .requestMatchers("/loja/*/checkout", "/loja/*/pedidos/**", "/loja/*/api/orders/**").hasAnyRole("CUSTOMER", "STORE_ADMIN", "PLATFORM_ADMIN")
+                .requestMatchers("/", "/login", "/admin/login", "/cadastro", "/recuperar-senha", "/redefinir-senha", "/loja/**", "/cardapio", "/produto/**", "/monte-seu-prato", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
+                .requestMatchers("/platform/**").hasRole("PLATFORM_ADMIN") // Painel da plataforma (Fase 5)
                 .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("STORE_ADMIN", "PLATFORM_ADMIN")
                 .requestMatchers("/checkout", "/pedidos/**", "/historico", "/perfil/**", "/api/orders/**").hasAnyRole("CUSTOMER", "STORE_ADMIN", "PLATFORM_ADMIN")
                 .anyRequest().permitAll())

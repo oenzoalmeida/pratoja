@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PratoJá — Escolha uma loja</title><link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<main class="page-shell" style="max-width:720px;margin:64px auto;padding:0 16px">
+  <span class="eyebrow">Plataforma PratoJá</span>
+  <h1>Escolha uma loja</h1>
+  <p style="margin-bottom:24px">Este PratoJá atende mais de um restaurante. Selecione uma loja para ver o cardápio e montar seu pedido.</p>
+  <div class="product-grid" style="grid-template-columns:1fr">
+    <article class="product-card" th:each="s:${stores}">
+      <a class="product-main" th:href="@{/loja/{slug}(slug=${s.slug})}">
+        <div class="product-info"><h2 th:text="${s.name}">Loja</h2><p th:text="${s.slogan}">Cardápio digital</p></div>
+      </a>
+      <div class="product-footer"><a class="btn btn-primary" th:href="@{/loja/{slug}(slug=${s.slug})}">Ver loja <svg th:replace="~{fragments :: icon('arrow-right','')}"></svg></a></div>
+    </article>
+  </div>
+  <p style="margin-top:32px"><small>· <a th:href="@{/termos}">Termos de Uso</a> · <a th:href="@{/privacidade}">Política de Privacidade</a></small></p>
+</main>
+</body>
+</html>

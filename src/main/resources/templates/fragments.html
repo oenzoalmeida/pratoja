@@ -6,16 +6,16 @@
 <!-- Cores configuráveis da loja: sobrescrevem as variáveis de :root do app.css quando preenchidas. -->
 <th:block th:fragment="brandStyle" th:if="${store.brandPrimary != null and !store.brandPrimary.isBlank()}"><style th:inline="text" th:if="${store.brandPrimaryDark != null and !store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];--orange-dark:[[${store.brandPrimaryDark}]];}</style><style th:inline="text" th:if="${store.brandPrimaryDark == null or store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];}</style></th:block>
 
-<header th:fragment="header" class="site-header">
+<header th:fragment="header" class="site-header" th:data-cart-base="@{/loja/{slug}/api/cart(slug=${store.slug})}">
   <th:block th:replace="~{fragments :: brandStyle}"></th:block>
-  <a class="brand" href="/" th:aria-label="|${store.name} — início|"><span class="brand-mark" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></a>
+  <a class="brand" th:href="@{/loja/{slug}(slug=${store.slug})}" th:aria-label="|${store.name} — início|"><span class="brand-mark" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></a>
   <nav class="desktop-nav" aria-label="Navegação principal">
-    <a href="/"><svg th:replace="~{fragments :: icon('house','')}"></svg>Início</a>
-    <a href="/cardapio"><svg th:replace="~{fragments :: icon('utensils','')}"></svg>Cardápio</a>
-    <a href="/monte-seu-prato"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg>Monte seu prato</a>
+    <a th:href="@{/loja/{slug}(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('house','')}"></svg>Início</a>
+    <a th:href="@{/loja/{slug}/cardapio(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('utensils','')}"></svg>Cardápio</a>
+    <a th:href="@{/loja/{slug}/monte-seu-prato(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg>Monte seu prato</a>
   </nav>
   <div class="header-actions">
-    <a class="cart-link" href="/carrinho" aria-label="Abrir sacola"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span><strong data-cart-count>0</strong></a>
+    <a class="cart-link" th:href="@{/loja/{slug}/carrinho(slug=${store.slug})}" aria-label="Abrir sacola"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span><strong data-cart-count>0</strong></a>
     <a sec:authorize="isAnonymous()" class="btn btn-outline" href="/login"><svg th:replace="~{fragments :: icon('user','')}"></svg>Entrar</a>
     <a sec:authorize="hasRole('CUSTOMER')" class="avatar-link" href="/perfil" aria-label="Meu perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span sec:authentication="name">Conta</span></a>
     <a sec:authorize="hasAnyRole('STORE_ADMIN','PLATFORM_ADMIN')" class="btn btn-dark" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg>Painel</a>
@@ -23,10 +23,10 @@
 </header>
 
 <nav th:fragment="mobileNav" class="mobile-nav" aria-label="Navegação móvel">
-  <a href="/"><svg th:replace="~{fragments :: icon('house','')}"></svg><span>Início</span></a>
-  <a href="/cardapio"><svg th:replace="~{fragments :: icon('utensils','')}"></svg><span>Cardápio</span></a>
-  <a href="/monte-seu-prato"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Montar</span></a>
-  <a href="/carrinho"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span></a>
+  <a th:href="@{/loja/{slug}(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('house','')}"></svg><span>Início</span></a>
+  <a th:href="@{/loja/{slug}/cardapio(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('utensils','')}"></svg><span>Cardápio</span></a>
+  <a th:href="@{/loja/{slug}/monte-seu-prato(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Montar</span></a>
+  <a th:href="@{/loja/{slug}/carrinho(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('shopping-bag','')}"></svg><span>Sacola</span></a>
   <a sec:authorize="isAnonymous()" href="/login"><svg th:replace="~{fragments :: icon('log-in','')}"></svg><span>Entrar</span></a>
   <a sec:authorize="hasRole('CUSTOMER')" href="/perfil"><svg th:replace="~{fragments :: icon('user','')}"></svg><span>Perfil</span></a>
   <a sec:authorize="hasAnyRole('STORE_ADMIN','PLATFORM_ADMIN')" href="/admin"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Painel</span></a>

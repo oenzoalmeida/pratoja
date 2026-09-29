@@ -27,7 +27,7 @@ public class DataSeeder implements CommandLineRunner {
             throw new IllegalStateException("PRATOJA_ADMIN_PASSWORD não definida: obrigatória em produção. Configure em Environment do serviço no Render.");
         if (missing) log.warn("PRATOJA_ADMIN_PASSWORD ausente: conta admin não criada/sincronizada (obrigatória em produção).");
         else {
-            seedUser("Administrador PratoJá", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.ADMIN);
+            seedUser("Administrador", "admin@pratoja.com.br", "(11) 99999-1000", adminPassword, DomainTypes.Role.ADMIN);
             users.findByEmailIgnoreCase("admin@pratoja.com.br").ifPresent(admin -> {
                 if (!encoder.matches(adminPassword, admin.getPasswordHash())) {
                     admin.setPasswordHash(encoder.encode(adminPassword));
@@ -41,7 +41,7 @@ public class DataSeeder implements CommandLineRunner {
         product(pratos, "Frango grelhado da casa", "File de frango suculento, arroz, feijao e salada fresca.", "32.90", "/images/frango.jpg", true, false);
         product(pratos, "Bife acebolado", "Bife macio com cebolas douradas, arroz soltinho, feijao e fritas.", "38.90", "/images/bife.jpg", true, false);
         product(pratos, "Parmegiana artesanal", "Frango empanado, molho de tomate, mucarela, arroz e batatas rusticas.", "41.90", "/images/parmegiana.jpg", false, false);
-        product(lanches, "Smash PratoJa", "Pao brioche, dois smash burgers, queijo, cebola caramelizada e molho da casa.", "29.90", "/images/smash.jpg", true, false);
+        product(lanches, "Smash Duplo", "Pao brioche, dois smash burgers, queijo, cebola caramelizada e molho da casa.", "29.90", "/images/smash.jpg", true, false);
         product(bebidas, "Suco natural", "Suco preparado na hora. Consulte os sabores disponiveis.", "9.90", "/images/suco.jpg", false, false);
         Product custom = product(monte, "Monte seu prato", "Escolha cada detalhe e crie uma refeicao do seu jeito.", "15.90", "/images/monte.jpg", true, true);
         addGroup(custom, DomainTypes.OptionType.BASE, "Escolha a base", 1, 1, 1, List.of(new Opt("Arroz branco", "0"), new Opt("Arroz integral", "2"), new Opt("Arroz + feijão", "3")));

@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import br.com.pratoja.pratoja.service.StoreSettingsService;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.mock.web.MockHttpSession;
 
@@ -33,10 +34,21 @@ class PratojaFlowTests {
     @Autowired AddressRepository addresses;
     @Autowired OrderRepository orders;
     @Autowired PasswordEncoder encoder;
+    @Autowired StoreSettingsService settingsService;
 
     @Test
     void publicCatalogAndSearchAreAvailable() throws Exception {
-        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(content().string(containsString("PratoJá")));
+        var store = settingsService.getSettings();
+        mvc.perform(get("/")).andExpect(status().isOk())
+                .andExpect(content().string(containsString(store.getName())));
+        if (store.getSlogan() != null && !store.getSlogan().isBlank()) {
+            mvc.perform(get("/")).andExpect(status().isOk())
+                    .andExpect(content().string(containsString(store.getSlogan())));
+        }
+        // Credito da plataforma permanece no rodape
+        mvc.perform(get("/")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Plataforma PratoJá")));
+
         mvc.perform(get("/cardapio").param("q", "frango")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Frango")));
         mvc.perform(get("/produto/1")).andExpect(status().isOk());
@@ -207,6 +219,21 @@ class PratojaFlowTests {
         mvc.perform(get("/pedidos/" + order.getId() + "/acompanhar")
                         .with(user(otherEmail).roles("CUSTOMER")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@pratoja.com.br", roles = "ADMIN")
+    void adminCanViewAndSaveStoreSettings() throws Exception {
+        mvc.perform(get("/admin/configuracoes")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Configurações da loja")));
+        mvc.perform(post("/admin/configuracoes").with(csrf())
+                        .param("name", "Restaurante Teste")
+                        .param("slogan", "Seu cardápio digital")
+                        .param("deliveryFee", "7.50"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/configuracoes"));
+        mvc.perform(get("/admin/configuracoes")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Restaurante Teste")));
     }
 
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor user(String username) {

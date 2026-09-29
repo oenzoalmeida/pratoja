@@ -36,6 +36,7 @@ class PasswordRecoverySecurityTests {
 
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
+    @Autowired br.com.pratoja.pratoja.repository.StoreRepository stores;
     @Autowired PasswordResetTokenRepository tokens;
     @Autowired PasswordEncoder encoder;
 
@@ -74,7 +75,8 @@ class PasswordRecoverySecurityTests {
         admin.setEmail(ADMIN_EMAIL);
         admin.setPhone("(00) 90000-0000");
         admin.setPasswordHash(encoder.encode(TEST_ONLY_ADMIN_PASSWORD));
-        admin.setRole(DomainTypes.Role.ADMIN);
+        admin.setRole(DomainTypes.Role.STORE_ADMIN);
+        admin.setStore(stores.findById(1L).orElseThrow());
         return users.save(admin);
     }
 

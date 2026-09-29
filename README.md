@@ -46,7 +46,15 @@ O acesso administrativo é provisionado internamente e não possui credencial p�
 ## Perfis de acesso
 
 - **Cliente (CUSTOMER):** monta pedidos, acompanha o status, avalia e gerencia o próprio perfil; pode excluir a própria conta.
-- **Administrador (ADMIN):** gerencia cardápio, pedidos, relatórios e as configurações da loja. Credencial não pública.
+- **Administrador da loja (STORE_ADMIN):** gerencia cardápio, pedidos, relatórios e as configurações da própria loja. Credencial definida por `PRATOJA_ADMIN_PASSWORD`.
+- **Administrador da plataforma (PLATFORM_ADMIN):** papel reservado ao operador da plataforma; painel `/platform` (em construção na Fase 5). Criado no boot apenas se `PRATOJA_PLATFORM_ADMIN_PASSWORD` estiver definida.
+
+## Multitenancy (Fases 1-3)
+
+- Cada entidade de operação (`categories`, `products`, `option_groups`, `orders`) possui `store_id`; `users.store_id` vincula o STORE_ADMIN à sua loja (NULL para clientes).
+- Toda consulta de backend é escopada por `store_id` (`findByIdAndStore_Id`, etc.); um STORE_ADMIN que tenta acessar objeto de outra loja recebe **404**.
+- Migração **V6** criou a tabela `stores` (migrando a antiga `store_settings` singleton, depois removida) com backfill da loja legada `restaurante` (id=1). **V7** (específico por banco) trocou a UNIQUE global de `categories.name` por `UNIQUE(store_id, name)`.
+- As páginas públicas ainda usam a loja única ativa como contexto; a rota pública por slug (`/loja/{slug}`) chega na Fase 4.
 
 ## Arquitetura / Estrutura
 
@@ -102,7 +110,7 @@ Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin, 
 - A recuperação de senha não envia e-mail: em modo demonstração, o link é exibido na tela.
 - Sem rate limiting nas rotas de autenticação.
 - O e-mail da conta não é editável após o cadastro.
-- A plataforma é single-tenant: uma instância atende um restaurante por vez.
+- A plataforma é multitenant em construção (Fases 1-3 concluídas): backend isolado por loja; lojas múltiplas ainda não são criáveis pela UI.
 
 ## Avisos específicos
 

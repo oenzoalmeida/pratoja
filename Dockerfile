@@ -32,9 +32,23 @@ COPY --from=build --chown=app:app /app/target/pratoja-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
-# JVM ciente de container: respeita os limites de memória do cgroup (essencial na
-# instância compartilhada Oracle A1) em vez de enxergar a RAM total do host.
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=40"
+# Flags JVM para memória limitada (Render Free 512 MB / instância compartilhada Oracle A1):
+#  - MaxRAMPercentage=75 : heap máx ~75% do limite do container (~384 MB em 512 MB),
+#    deixando o resto para metaspace, stack de threads e off-heap (evita OOM killer
+#    sem starvar o heap). A JVM é ciente de cgroup: respeita o limite de memória do
+#    container em vez de enxergar a RAM total do host.
+#  - InitialRAMPercentage=50 : heap inicial menor no boot (menos pico de alocação
+#    durante o cold start).
+#  - UseSerialGC : em heap pequeno (~384 MB) e CPU limitada, o Serial GC tem menor
+#    pegada de memória nativa (sem threads de GC paralelas/concorrentes do G1) e
+#    pausas curtas suficientes para o tráfego de demo. G1 só compensa em heaps maiores.
+#  - ExitOnOutOfMemoryError : em OOM o processo sai imediatamente e a plataforma
+#    (Render/Oracle) reinicia o contêiner, em vez de servir erros de um processo zombie.
+#  - TieredStopAtLevel=1 foi AVALIADO E DESCARTADO: acelera o boot (só compilador C1),
+#    mas limita o JIT a otimizações rasas para sempre — degrada latência e CPU
+#    no estado estacionário, o oposto do objetivo. Comportamento do app é inalterado.
+# JAVA_OPTS é expansível em runtime (docker run -e JAVA_OPTS=...), sobrescrevendo o padrão.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:InitialRAMPercentage=50 -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError"
 
 # Health real: HTTP no endpoint público /login (permitAll, 200 sem autenticação).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=5 \

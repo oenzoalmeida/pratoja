@@ -124,6 +124,28 @@ Rate limiting nas rotas de recuperação de senha (detalhes em [docs/email-e-rec
 
 Em produção em https://pratoja.oenzoalmeida.blitz.cloud (container Docker + PostgreSQL Supabase). Multitenancy nas fases 1–5 concluído: isolamento por loja no back-end, páginas públicas por slug e painel `/platform`.
 
+## Performance no Render Free
+
+O plano Free do Render (512 MB RAM, CPU limitada, contêiner **dorme após ~15 min sem tráfego**) define o perfil de operação do PratoJá em produção:
+
+- **Cold start Java saudável: ~150–180 s** do primeiro request até a resposta (pull do contêiner + JVM + Spring Boot + Flyway + HikariCP contra o Supabase remoto). É o comportamento esperado do plano; um cold start bem maior indica problema de banco (abaixo) e não do app.
+- **Flags JVM no Dockerfile** (comportamento do app inalterado): `-XX:MaxRAMPercentage=75` (heap ~384 MB dos 512 MB do plano), `-XX:InitialRAMPercentage=50`, `-XX:+UseSerialGC` (menor pegada de memória nativa e de CPU de GC em heap pequeno — G1 só compensa em heaps maiores) e `-XX:+ExitOnOutOfMemoryError` (OOM reinicia o contêiner em vez de servir erro de processo zombie). `-XX:TieredStopAtLevel=1` foi avaliado e descartado: acelera o boot, mas degrada latência e CPU no estado estacionário.
+- **Sintoma "site fora" (30/09/2026):** produção fora com 0 bytes por 8+ sondas. Hipótese principal: **projeto Supabase pausado** — o plano free do Supabase pausa o banco após ~7 dias sem atividade (último deploy em 22/09). Com o banco pausado, o boot falha na conexão (Flyway/HikariCP) e o serviço entra em crash loop; o health check do Render (`/`, que consulta o banco) nunca fica verde.
+
+### Recuperação (quando o Supabase pausar)
+
+1. **Painel Supabase → Restore**: abrir o projeto e clicar em **Restore project** (o banco volta em alguns minutos; dados preservados).
+2. **Render → Manual Deploy → Deploy latest commit** (ou qualquer commit vazio para disparar redeploy) para reiniciar o serviço com o banco já no ar.
+3. O primeiro acesso ainda leva o cold start de ~150–180 s; monitorar em **Render → Logs** até `Started PratojaApplication` e o health check ficar verde.
+
+### Prevenção
+
+- Um ping periódico externo (cron-action/UptimeRobot a cada 1–5 dias) no `https://pratoja.onrender.com` mantém o Supabase ativo e reduz a chance de pausa — lembrando que o próprio ping também sofre o cold start do Render Free.
+
+### Opção futura (não aplicada): health check dedicado com Actuator
+
+Hoje o `healthCheckPath` do `render.yaml` é `/` (home Thymeleaf), que consulta o banco — um 502/503 lá reflete banco, não só o app. O ideal seria adicionar `spring-boot-starter-actuator` ao `pom.xml`, expor apenas `management.endpoints.web.exposure.include=health` e apontar `healthCheckPath: /actuator/health`. **A dependência não foi adicionada neste PR de propósito** (mudança de dependência/comportamento além do escopo de boot); fica documentada como opção futura. Endpoints alternativos sem banco não existem hoje.
+
 ## Limitações conhecidas
 
 Pagamento e confirmação são **simulados**. Nenhuma cobrança real é realizada.

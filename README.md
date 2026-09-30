@@ -32,6 +32,7 @@ O acesso administrativo é provisionado internamente e não possui credencial p�
 - Endereços de entrega, checkout para entrega ou retirada e pagamentos simulados por PIX, cartão ou dinheiro.
 - Acompanhamento do pedido, histórico, repetir pedido e avaliação.
 - Painel ADMIN com dashboard, pedidos, alteração de status, produtos, categorias, relatórios e configurações da loja.
+- Painel da plataforma (`/platform`) para criar e gerenciar lojas e administradores de loja.
 - Exclusão de conta pela interface (dados pessoais apagados; histórico anonimizado).
 - Termos de Uso e Política de Privacidade integrados à aplicação.
 
@@ -49,7 +50,7 @@ O acesso administrativo é provisionado internamente e não possui credencial p�
 - **Administrador da loja (STORE_ADMIN):** gerencia cardápio, pedidos, relatórios e as configurações da própria loja. Credencial definida por `PRATOJA_ADMIN_PASSWORD`.
 - **Administrador da plataforma (PLATFORM_ADMIN):** operador da plataforma. Painel `/platform`: lista lojas (nome, slug, status, nº de produtos/pedidos/admins, taxa, criação), cria loja (slug gerado do nome e editável, com validação de unicidade), ativa/desativa loja (dados preservados; loja inativa fica indisponível em `/loja/{slug}`), edita dados básicos e gerencia STORE_ADMINs por loja (criação com senha inicial; desativação nunca deleta). É credencial da PLATAFORMA (não de restaurante): criado no boot apenas se `PRATOJA_PLATFORM_ADMIN_PASSWORD` estiver definida (e-mail fixo do seed: `platform@pratoja.com.br`). Não vê dados transacionais além de métricas agregadas.
 
-## Multitenancy (Fases 1-3)
+## Multitenancy (Fases 1-5)
 
 - Cada entidade de operação (`categories`, `products`, `option_groups`, `orders`) possui `store_id`; `users.store_id` vincula o STORE_ADMIN à sua loja (NULL para clientes).
 - Toda consulta de backend é escopada por `store_id` (`findByIdAndStore_Id`, etc.); um STORE_ADMIN que tenta acessar objeto de outra loja recebe **404**.
@@ -136,7 +137,7 @@ Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin, 
 - Recuperação de senha: com `PRATOJA_MAIL_ENABLED=false` (default), não há envio de e-mail — em modo demonstração o link é exibido na tela; com `true`, o envio é real via Brevo/SMTP.
 - Sem rate limiting nas rotas de autenticação.
 - O e-mail da conta não é editável após o cadastro.
-- A plataforma é multitenant em construção (Fases 1-3 concluídas): backend isolado por loja; lojas múltiplas ainda não são criáveis pela UI.
+- A plataforma é multitenant (Fases 1-5 concluídas: isolamento por loja no backend, páginas públicas por slug e painel `/platform` para criar e gerenciar lojas pela UI); fases seguintes podem alterar fluxos existentes.
 
 ## Avisos específicos
 

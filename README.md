@@ -89,6 +89,32 @@ src/main/resources/
 
 Acesse `http://localhost:8080`. Por padrão o projeto usa H2 em memória; para PostgreSQL, ative o perfil `postgres` com `DATABASE_URL`, `DATABASE_USERNAME` e `DATABASE_PASSWORD`.
 
+## E-mails transacionais
+
+E-mails reais (hoje: **somente recuperação de senha**) usam o padrão **outbox**: a gravação acontece na mesma transação do evento de negócio (migration `V9__mail_outbox`) e um scheduler (`fixedDelay` ~30s) envia com retry exponencial (~1min, 5min, 15min), marcando **DEAD** após 5 tentativas. Templates em modo texto ficam em `src/main/resources/templates/email/`.
+
+### Variáveis de ambiente
+
+| Variável | Default | Descrição |
+|---|---|---|
+| `PRATOJA_MAIL_ENABLED` | `false` | Liga/desliga o subsistema. Com `false`, **nenhum e-mail é enviado** e a recuperação mantém o comportamento atual (link demo na tela apenas em demo-mode). Com `true`, o link de reset **nunca** aparece em tela — sai somente por e-mail. |
+| `SMTP_HOST` | *(vazio)* | Host SMTP. Ex. Brevo: `smtp-relay.brevo.com` |
+| `SMTP_PORT` | `587` | Porta SMTP (Brevo usa `587` com STARTTLS) |
+| `SMTP_USER` | *(vazio)* | Usuário SMTP (no Brevo, o e-mail de login do Brevo) |
+| `SMTP_PASSWORD` | *(vazio)* | Senha SMTP (no Brevo, a **SMTP key** gerada no painel — nunca a senha da conta) |
+| `MAIL_FROM` | `notificacoes@pratoja.app` | Remetente (`From:`) dos e-mails |
+| `MAIL_BASE_URL` | `http://localhost:8080` | URL base usada nos links dos e-mails (ex.: `https://pratoja.onrender.com`) |
+| `MAIL_POLL_INTERVAL_MS` | `30000` | Intervalo do scheduler do outbox |
+
+**Nenhuma credencial SMTP é versionada** — tudo entra por variáveis de ambiente (`spring.mail.*` lê `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`).
+
+### Instruções Brevo
+
+1. No painel Brevo: **SMTP & API → Senders & IP**; crie/garanta um sender para o `MAIL_FROM` (ex.: `notificacoes@pratoja.app`).
+2. Em **SMTP & API → SMTP**, gere a **SMTP key** e use: `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, `SMTP_USER=<login Brevo>`, `SMTP_PASSWORD=<smtp key>`.
+3. Defina `PRATOJA_MAIL_ENABLED=true`, `MAIL_FROM` e `MAIL_BASE_URL` (URL pública do deploy).
+4. O monitor de falhas é o próprio outbox: linhas `FAILED` têm `last_error` e `next_attempt_at`; `DEAD` indica entrega não concluída após 5 tentativas.
+
 ## Testes
 
 Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin, configurações da loja) executados via Maven Wrapper e GitHub Actions:
@@ -107,7 +133,7 @@ Testes de fluxo com MockMvc (catálogo, cadastro/login, checkout, painel admin, 
 ## Limitações conhecidas
 
 - Pagamento e confirmação são **simulados**; nenhuma cobrança real é realizada.
-- A recuperação de senha não envia e-mail: em modo demonstração, o link é exibido na tela.
+- Recuperação de senha: com `PRATOJA_MAIL_ENABLED=false` (default), não há envio de e-mail — em modo demonstração o link é exibido na tela; com `true`, o envio é real via Brevo/SMTP.
 - Sem rate limiting nas rotas de autenticação.
 - O e-mail da conta não é editável após o cadastro.
 - A plataforma é multitenant em construção (Fases 1-3 concluídas): backend isolado por loja; lojas múltiplas ainda não são criáveis pela UI.

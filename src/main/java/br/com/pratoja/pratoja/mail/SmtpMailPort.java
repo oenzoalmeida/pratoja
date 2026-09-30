@@ -26,7 +26,7 @@ public class SmtpMailPort implements MailPort {
         Object subject = vars.getOrDefault("subject", "PratoJá");
         Context ctx = new Context();
         vars.forEach(ctx::setVariable);
-        String body = mailTemplateEngine.process("email/" + template, ctx);
+        String body = mailTemplateEngine.process(template, ctx);
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);

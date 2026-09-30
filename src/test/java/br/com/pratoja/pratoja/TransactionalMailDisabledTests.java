@@ -29,7 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * comportamento atual é preservado (demoLink em tela somente no demo-mode). O JavaMailSender
  * é mockado para provar que nenhuma entrega acontece, mesmo que alguém enfileire por engano.
  */
-@SpringBootTest
+// Mesmas properties de PasswordRecoverySecurityTests: os dois contextos continuam idênticos e compartilhados
+// (o limitador é singleton por contexto e várias requisições da suite saem do mesmo IP simulado 127.0.0.1).
+@SpringBootTest(properties = {
+        "pratoja.recovery.rate-limit.max-attempts-per-ip=1000",
+        "pratoja.recovery.rate-limit.max-per-email=1000"
+})
 @AutoConfigureMockMvc
 class TransactionalMailDisabledTests {
     private static final String LINK_MARKER = "redefinir-senha?token=";

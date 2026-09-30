@@ -24,7 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+// Rate limit de recuperação desativado NESSE contexto (limites altos): esta classe testa a segurança do
+// fluxo de recuperação, não o limitador (coberto por RecoveryRateLimitTests). Vários POSTs da suite partem
+// do mesmo IP simulado (127.0.0.1) e o limitador é um singleton do contexto compartilhado.
+@SpringBootTest(properties = {
+        "pratoja.recovery.rate-limit.max-attempts-per-ip=1000",
+        "pratoja.recovery.rate-limit.max-per-email=1000"
+})
 @AutoConfigureMockMvc
 class PasswordRecoverySecurityTests {
     private static final String DEMO_EMAIL = "cliente@pratoja.com.br";

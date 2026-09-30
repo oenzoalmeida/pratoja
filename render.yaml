@@ -27,3 +27,21 @@ services:
         sync: false
       - key: DATABASE_PASSWORD
         sync: false
+      # E-mails transacionais: DESLIGADO por padrão — a produção NÃO muda de comportamento
+      # até o mail ser habilitado explicitamente com as credenciais SMTP no painel.
+      - key: PRATOJA_MAIL_ENABLED
+        value: "false"
+      # SMTP (ex.: Brevo smtp-relay.brevo.com:587). Valores definidos no painel do Render.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        value: "notificacoes@pratoja.app"
+      # URL pública usada nos links dos e-mails (ex.: https://pratoja.onrender.com)
+      - key: MAIL_BASE_URL
+        sync: false

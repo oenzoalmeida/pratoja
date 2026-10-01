@@ -88,7 +88,7 @@ src/main/resources/
 .\mvnw.cmd spring-boot:run    # Windows
 ```
 
-Acesse `http://localhost:8080`. Por padrão o projeto usa H2 em memória; para PostgreSQL, ative o perfil `postgres` com `DATABASE_URL`, `DATABASE_USERNAME` e `DATABASE_PASSWORD`.
+Acesse `http://localhost:8080`. Por padrão o projeto usa H2 em arquivo (`jdbc:h2:file:./data/pratoja`, persistido na pasta `data/`); para PostgreSQL, ative o perfil `postgres` com `DATABASE_URL`, `DATABASE_USERNAME` e `DATABASE_PASSWORD`.
 
 ## E-mails transacionais
 

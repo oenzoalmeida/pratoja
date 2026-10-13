@@ -244,6 +244,22 @@ class PratojaFlowTests {
                 .andExpect(content().string(containsString("Restaurante Teste")));
     }
 
+
+    @Test
+    @WithMockUser(username = "cliente@pratoja.com.br", roles = "CUSTOMER")
+    void checkoutRendersWithFilledCart() throws Exception {
+        MvcResult added = mvc.perform(post("/loja/restaurante/api/cart/items").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productId\":1,\"quantity\":2,\"optionIds\":[],\"notes\":\"\"}"))
+                .andExpect(status().isOk()).andReturn();
+        MockHttpSession session = (MockHttpSession) added.getRequest().getSession(false);
+        mvc.perform(get("/loja/restaurante/checkout").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Finalize seu pedido")))
+                .andExpect(content().string(containsString("Subtotal")));
+    }
+
+
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor user(String username) {
         return org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(username);
     }

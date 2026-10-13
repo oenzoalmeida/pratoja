@@ -23,4 +23,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/pratoja:cloudrun
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/pratoja:cloudrun
+            ghcr.io/${{ github.repository_owner }}/pratoja:latest

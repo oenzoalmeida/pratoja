@@ -6,9 +6,9 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 ## Demonstração
 
-**Aplicação:** https://pratoja.onrender.com
+**Aplicação:** https://pratoja.oenzoalmeida.blitz.cloud
 
-> A demo roda no plano gratuito do Render e pode demorar para responder após hibernação. Se estiver indisponível no momento, os passos abaixo executam o projeto localmente em poucos minutos.
+> A demo roda em um plano gratuito e pode demorar alguns segundos para acordar após períodos sem visitas. Se estiver indisponível no momento, os passos abaixo executam o projeto localmente em poucos minutos.
 
 **Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123` — credencial pública de demonstração; os dados podem ser alterados por outros visitantes. O acesso administrativo é provisionado internamente e não possui credencial pública.
 
@@ -102,7 +102,7 @@ Nenhuma credencial é versionada.
 
 ## Status
 
-Em produção em https://pratoja.onrender.com (Render + PostgreSQL). Multitenancy nas fases 1–5 concluído: isolamento por loja no back-end, páginas públicas por slug e painel `/platform`.
+Em produção em https://pratoja.oenzoalmeida.blitz.cloud (container Docker + PostgreSQL Supabase). Multitenancy nas fases 1–5 concluído: isolamento por loja no back-end, páginas públicas por slug e painel `/platform`.
 
 ## Limitações conhecidas
 

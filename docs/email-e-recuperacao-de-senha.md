@@ -16,7 +16,7 @@ E-mails reais (hoje: **somente recuperação de senha**) usam o padrão **outbox
 | `SMTP_USER` | *(vazio)* | Usuário SMTP (no Brevo, o e-mail de login do Brevo) |
 | `SMTP_PASSWORD` | *(vazio)* | Senha SMTP (no Brevo, a **SMTP key** gerada no painel — nunca a senha da conta) |
 | `MAIL_FROM` | `notificacoes@pratoja.app` | Remetente (`From:`) dos e-mails |
-| `MAIL_BASE_URL` | `http://localhost:8080` | URL base usada nos links dos e-mails (ex.: `https://pratoja.onrender.com`) |
+| `MAIL_BASE_URL` | `http://localhost:8080` | URL base usada nos links dos e-mails (ex.: `https://pratoja.oenzoalmeida.blitz.cloud`) |
 | `MAIL_POLL_INTERVAL_MS` | `30000` | Intervalo do scheduler do outbox |
 
 **Nenhuma credencial SMTP é versionada** — tudo entra por variáveis de ambiente (`spring.mail.*` lê `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`).

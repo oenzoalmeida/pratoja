@@ -6,6 +6,7 @@ import br.com.pratoja.pratoja.service.StoreService;
 import br.com.pratoja.pratoja.repository.StoreRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -14,12 +15,24 @@ import org.springframework.web.bind.annotation.ModelAttribute;
  * - Em /admin/**: a loja do admin logado (STORE_ADMIN). PLATFORM_ADMIN cai no fallback.
  * - Em /loja/{slug}/**: a loja resolvida pela rota (active=true; inativa -> null, handlers devolvem 404).
  * - Demais páginas: fallback = loja única ativa (compat).
+ *
+ * Também expõe "siteBaseUrl": a URL pública absoluta da aplicação, usada para montar
+ * og:image/twitter:image absolutos (crawlers externos como LinkedIn exigem URL absoluta).
+ * Configurável por env PUBLIC_BASE_URL; default = domínio de produção.
  */
 @ControllerAdvice @RequiredArgsConstructor
 public class StoreAdvice {
     private final StoreService storeService;
     private final CurrentUserService currentUser;
     private final StoreRepository stores;
+
+    @Value("${pratoja.public-base-url:https://pratoja.oenzoalmeida.blitz.cloud}")
+    private String siteBaseUrl;
+
+    /** URL pública absoluta (sem barra final), para metatags sociais. */
+    @ModelAttribute("siteBaseUrl") public String siteBaseUrl() {
+        return siteBaseUrl == null ? "" : siteBaseUrl.replaceAll("/+$", "");
+    }
 
     @ModelAttribute("store") public Store store(HttpServletRequest request, org.springframework.security.core.Authentication auth) {
         if (request == null) return stores.findFirstByActiveTrueOrderByIdAsc().orElse(null);

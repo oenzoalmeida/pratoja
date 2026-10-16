@@ -12,7 +12,18 @@
     <meta property="og:site_name" th:content="${store.name}">
     <meta property="og:title" th:content="${store.heroTitle != null and !store.heroTitle.isBlank()} ? ${store.heroTitle + ' — ' + store.name} : ${store.name}">
     <meta property="og:description" th:content="${(store.description != null and !store.description.isBlank()) ? store.description : ((store.slogan != null and !store.slogan.isBlank()) ? store.slogan : 'Cardápio digital e pedidos online')}">
-    <meta property="og:image" th:content="${store.logoPath != null and !store.logoPath.isBlank()} ? ${store.logoPath} : '/images/placeholder.jpg'">
+    <meta property="og:url" th:content="${siteBaseUrl + '/loja/' + store.slug}">
+    <!-- og:image absoluto: logo da loja quando configurado, senão a capa social da plataforma (1200x630). -->
+    <meta property="og:image" th:content="${(store.logoPath != null and !store.logoPath.isBlank()) ? (store.logoPath.startsWith('http') ? store.logoPath : (siteBaseUrl + store.logoPath)) : (siteBaseUrl + '/og-image.png')}">
+    <!-- Dimensões declaradas só para a capa de fallback da plataforma (1200x630); logo da loja tem proporção própria. -->
+    <th:block th:if="${store.logoPath == null or store.logoPath.isBlank()}">
+      <meta property="og:image:width" content="1200">
+      <meta property="og:image:height" content="630">
+    </th:block>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" th:content="${store.heroTitle != null and !store.heroTitle.isBlank()} ? ${store.heroTitle + ' — ' + store.name} : ${store.name}">
+    <meta name="twitter:description" th:content="${(store.description != null and !store.description.isBlank()) ? store.description : ((store.slogan != null and !store.slogan.isBlank()) ? store.slogan : 'Cardápio digital e pedidos online')}">
+    <meta name="twitter:image" th:content="${(store.logoPath != null and !store.logoPath.isBlank()) ? (store.logoPath.startsWith('http') ? store.logoPath : (siteBaseUrl + store.logoPath)) : (siteBaseUrl + '/og-image.png')}">
   </th:block>
 </th:block>
 

@@ -1,8 +1,12 @@
 name: Build image (GHCR)
 
-# Constrói a imagem Docker e publica no GHCR para deploy no Cloud Run
-# (request-based, sem segredos na imagem; envs ficam no runtime).
+# Constrói a imagem Docker e publica no GHCR (request-based, sem segredos na
+# imagem; envs ficam no runtime). Agora dispara automaticamente a cada push na
+# main e, se houver BLITZ_API_KEY, aciona o redeploy na Blitz.cloud via CLI
+# oficial — tornando o deploy ponta-a-ponta automático.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -26,3 +30,23 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/pratoja:cloudrun
             ghcr.io/${{ github.repository_owner }}/pratoja:latest
+
+  redeploy-blitz:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Redeploy on Blitz.cloud (if key present)
+        env:
+          BLITZ_API_KEY: ${{ secrets.BLITZ_API_KEY }}
+          # Nome/endereço do app na Blitz; ajustável via variável de repositório.
+          BLITZ_APP: ${{ vars.BLITZ_APP || 'pratoja' }}
+        run: |
+          if [ -z "$BLITZ_API_KEY" ]; then
+            echo "::notice::BLITZ_API_KEY ausente. Pulei o redeploy automático; a Blitz ainda pode atualizar sozinha pelo auto-update noturno da tag :latest."
+            exit 0
+          fi
+          curl -fsSL https://blitz.cloud/cli/blitz.js -o /tmp/blitz.js
+          echo "Redeploy da imagem :latest no app '$BLITZ_APP'..."
+          # Repõe a tag móvel :latest (puxa o digest recém-publicado) e reinicia.
+          node /tmp/blitz.js deploy image "ghcr.io/${{ github.repository_owner }}/pratoja" --tag latest --address "$BLITZ_APP" --yes --json \
+            || node /tmp/blitz.js restart "$BLITZ_APP" --yes

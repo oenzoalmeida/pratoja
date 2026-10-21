@@ -132,7 +132,7 @@ class TransactionalMailEnabledTests {
         }
 
         // Fluxo completo: o link recebido por e-mail realmente redefine a senha
-        String nova = "Redefinida" + UUID_EXT.substring(0, 6);
+        String nova = "Redefinida9" + UUID_EXT.substring(0, 6);
         mvc.perform(post("/redefinir-senha").with(csrf())
                 .param("token", token).param("password", nova).param("confirmPassword", nova))
             .andExpect(status().is3xxRedirection())

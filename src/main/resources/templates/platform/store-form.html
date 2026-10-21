@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nova loja — Plataforma</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nova loja — Plataforma</title><link rel="stylesheet" href="/css/app.css"><script defer src="/js/app.js"></script></head>
 <body><div class="admin-shell"><aside th:replace="~{platform/fragments :: sidebar('new')}"></aside><main class="admin-main">
 <header class="admin-top"><div><span class="eyebrow">Plataforma</span><h1>Nova loja</h1></div><a class="back" href="/platform"><svg th:replace="~{fragments :: icon('arrow-left','')}"></svg>Voltar</a></header>
 <div class="alert error" th:if="${error}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span th:text="${error}"></span></div>

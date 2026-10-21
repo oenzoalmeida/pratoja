@@ -1,0 +1,25 @@
+# PratoJá — robots.txt
+# Páginas públicas de cardápio (/loja/{slug}) podem ser indexadas.
+# Painéis administrativos, autenticação e áreas privadas de clientes ficam fora dos buscadores.
+
+User-agent: *
+Allow: /$
+Allow: /loja/
+Disallow: /admin
+Disallow: /platform
+Disallow: /api
+Disallow: /login
+Disallow: /admin/login
+Disallow: /cadastro
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+Disallow: /logout
+Disallow: /perfil
+Disallow: /checkout
+Disallow: /carrinho
+Disallow: /historico
+Disallow: /loja/*/checkout
+Disallow: /loja/*/carrinho
+Disallow: /loja/*/pedidos
+Disallow: /loja/*/api
+Disallow: /error

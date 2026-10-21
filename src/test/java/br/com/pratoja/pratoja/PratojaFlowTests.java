@@ -60,6 +60,18 @@ class PratojaFlowTests {
     }
 
     @Test
+    void unknownEndpointsAreDeniedByDefault() throws Exception {
+        mvc.perform(get("/api/rota-nao-cadastrada"))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void legalPagesRemainPublic() throws Exception {
+        mvc.perform(get("/termos")).andExpect(status().isOk());
+        mvc.perform(get("/privacidade")).andExpect(status().isOk());
+    }
+
+    @Test
     void publicCatalogAndSearchAreAvailable() throws Exception {
         var store = stores.findById(1L).orElseThrow();
         // Rotas antigas redirecionam 301 para /loja/{slug}; "/" pode ser landing se houver 2+ lojas ativas

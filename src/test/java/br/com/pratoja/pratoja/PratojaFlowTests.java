@@ -7,6 +7,7 @@ import br.com.pratoja.pratoja.domain.User;
 import br.com.pratoja.pratoja.repository.AddressRepository;
 import br.com.pratoja.pratoja.repository.OrderRepository;
 import br.com.pratoja.pratoja.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -36,6 +37,27 @@ class PratojaFlowTests {
     @Autowired OrderRepository orders;
     @Autowired PasswordEncoder encoder;
     @Autowired StoreRepository stores;
+
+    /**
+     * Auto-suficiência de ordem: o DataSeeder só provisiona admin@pratoja.com.br quando
+     * PRATOJA_ADMIN_PASSWORD está definida (o job H2 do CI não define) e, antes desta correção,
+     * os testes de admin dependiam de MultitenantIsolationTests rodar antes para criar o usuário.
+     * Aqui a classe garante o seu próprio admin da loja 1 (reutilizando o existente quando já
+     * provisionado — compatível com a regra V8 de 1 STORE_ADMIN por loja).
+     */
+    @BeforeEach
+    void ensureStoreAdmin() {
+        users.findByEmailIgnoreCase("admin@pratoja.com.br").orElseGet(() -> {
+            User admin = new User();
+            admin.setName("Admin Loja 1");
+            admin.setEmail("admin@pratoja.com.br");
+            admin.setPhone("(11) 99999-1000");
+            admin.setPasswordHash(encoder.encode("SenhaForte123"));
+            admin.setRole(DomainTypes.Role.STORE_ADMIN);
+            admin.setStore(stores.findById(1L).orElseThrow());
+            return users.save(admin);
+        });
+    }
 
     @Test
     void publicCatalogAndSearchAreAvailable() throws Exception {

@@ -1,9 +1,15 @@
 name: Build image (GHCR)
 
-# Constrói a imagem Docker e publica no GHCR (request-based, sem segredos na
-# imagem; envs ficam no runtime). Agora dispara automaticamente a cada push na
-# main e, se houver BLITZ_API_KEY, aciona o redeploy na Blitz.cloud via CLI
-# oficial — tornando o deploy ponta-a-ponta automático.
+# Pipeline de imagem do PratoJá.
+#
+# Fluxo: testes -> build multi-arch (amd64 + arm64) no GHCR -> deploy.
+#   * A imagem multi-arch permite o MESMO :latest rodar na Blitz.cloud (amd64) e
+#     na instância Oracle Ampere A1 (arm64).
+#   * O build só acontece se os testes passarem (não publica versão quebrada).
+#   * redeploy-blitz:  mantém o deploy atual na Blitz (pulado sem BLITZ_API_KEY).
+#   * deploy-oci:      novo alvo Oracle via SSH (pulado sem os segredos OCI_*).
+#     Faz pull da imagem, sobe a stack deploy/ e verifica a saúde pós-deploy;
+#     em falha, o passo retorna erro (o compose mantém a versão anterior rodando).
 on:
   push:
     branches: [main]
@@ -14,10 +20,26 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  # Portão de qualidade: reaproveita a suíte (H2 + PostgreSQL) antes de publicar.
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Test
+        run: bash ./mvnw --batch-mode --no-transfer-progress test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -27,9 +49,14 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository_owner }}/pratoja:cloudrun
             ghcr.io/${{ github.repository_owner }}/pratoja:latest
+            ghcr.io/${{ github.repository_owner }}/pratoja:${{ github.sha }}
 
   redeploy-blitz:
     needs: build
@@ -38,15 +65,63 @@ jobs:
       - name: Redeploy on Blitz.cloud (if key present)
         env:
           BLITZ_API_KEY: ${{ secrets.BLITZ_API_KEY }}
-          # Nome/endereço do app na Blitz; ajustável via variável de repositório.
           BLITZ_APP: ${{ vars.BLITZ_APP || 'pratoja' }}
         run: |
           if [ -z "$BLITZ_API_KEY" ]; then
-            echo "::notice::BLITZ_API_KEY ausente. Pulei o redeploy automático; a Blitz ainda pode atualizar sozinha pelo auto-update noturno da tag :latest."
+            echo "::notice::BLITZ_API_KEY ausente. Pulei o redeploy automático da Blitz."
             exit 0
           fi
           curl -fsSL https://blitz.cloud/cli/blitz.js -o /tmp/blitz.js
           echo "Redeploy da imagem :latest no app '$BLITZ_APP'..."
-          # Repõe a tag móvel :latest (puxa o digest recém-publicado) e reinicia.
           node /tmp/blitz.js deploy image "ghcr.io/${{ github.repository_owner }}/pratoja" --tag latest --address "$BLITZ_APP" --yes --json \
             || node /tmp/blitz.js restart "$BLITZ_APP" --yes
+
+  # Deploy na instância Oracle Always Free via SSH. Totalmente guardado: sem os
+  # segredos OCI_SSH_HOST / OCI_SSH_USER / OCI_SSH_KEY o job apenas avisa e sai.
+  # Pré-requisito na VM: a stack já clonada em ~/pratoja com deploy/.env preenchido.
+  deploy-oci:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check OCI secrets
+        id: guard
+        run: |
+          if [ -n "${{ secrets.OCI_SSH_HOST }}" ] && [ -n "${{ secrets.OCI_SSH_USER }}" ] && [ -n "${{ secrets.OCI_SSH_KEY }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Segredos OCI ausentes (OCI_SSH_HOST/OCI_SSH_USER/OCI_SSH_KEY). Deploy OCI pulado."
+          fi
+      - name: Deploy via SSH (pull + up + health + rollback)
+        if: steps.guard.outputs.ready == 'true'
+        env:
+          OCI_SSH_HOST: ${{ secrets.OCI_SSH_HOST }}
+          OCI_SSH_USER: ${{ secrets.OCI_SSH_USER }}
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/pratoja:${{ github.sha }}
+          APP_DIR: ${{ vars.OCI_APP_DIR || '~/pratoja' }}
+        run: |
+          install -m 600 /dev/stdin /tmp/oci_key <<< "$OCI_SSH_KEY"
+          SSH="ssh -i /tmp/oci_key -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/tmp/known_hosts"
+          $SSH "${OCI_SSH_USER}@${OCI_SSH_HOST}" bash -s <<EOF
+          set -euo pipefail
+          cd ${APP_DIR}
+          # Fixa o digest testado desta revisão (evita puxar um :latest divergente).
+          export PRATOJA_IMAGE="${IMAGE}"
+          PREV=\$(cd deploy && docker compose images -q app || true)
+          docker pull "${IMAGE}"
+          (cd deploy && docker compose up -d)
+          # Verificação pós-deploy: espera o health do container ficar healthy.
+          ok=0
+          for i in \$(seq 1 30); do
+            st=\$(cd deploy && docker inspect -f '{{.State.Health.Status}}' \$(docker compose ps -q app) 2>/dev/null || echo starting)
+            if [ "\$st" = "healthy" ]; then ok=1; break; fi
+            sleep 5
+          done
+          if [ "\$ok" != "1" ]; then
+            echo "::error::Health check falhou; mantendo/retornando versão anterior."
+            if [ -n "\$PREV" ]; then export PRATOJA_IMAGE="\$PREV"; (cd deploy && docker compose up -d); fi
+            exit 1
+          fi
+          echo "Deploy OCI saudável: ${IMAGE}"
+          EOF

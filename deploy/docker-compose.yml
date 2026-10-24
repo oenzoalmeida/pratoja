@@ -1,0 +1,107 @@
+# PratoJá — stack de produção para a instância Oracle Ampere A1 (Always Free, ARM64).
+#
+# Topologia:
+#   caddy  -> proxy reverso HTTPS (Let's Encrypt automático e gratuito)
+#   app    -> PratoJá (Spring Boot, imagem ARM64 do GHCR)
+#   db     -> PostgreSQL 16 (somente na rede interna; NUNCA exposto à internet)
+#
+# Persistência em volumes nomeados (sobrevivem a restart/redeploy/reboot):
+#   pratoja_db      -> dados do PostgreSQL
+#   pratoja_uploads -> imagens de produtos enviadas pelo admin (app.upload-dir)
+#   caddy_data      -> certificados TLS e estado do ACME
+#
+# Este arquivo roda o PratoJá sozinho. Para hospedar PratoJá + PenteFino na mesma
+# VM atrás de um único Caddy, use o compose combinado em docs/migracao-oracle.md.
+#
+# Nenhum segredo é versionado: os valores vêm de deploy/.env (ver .env.example),
+# criado apenas na VM com permissão 600.
+
+name: pratoja
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-pratoja}
+      POSTGRES_USER: ${DB_USER:-pratoja}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD em deploy/.env}
+    volumes:
+      - pratoja_db:/var/lib/postgresql/data
+    # Sem "ports:" — o Postgres fica acessível apenas pela rede interna do compose.
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pratoja} -d ${DB_NAME:-pratoja}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  app:
+    image: ${PRATOJA_IMAGE:-ghcr.io/oenzoalmeida/pratoja:latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      # Atrás do proxy HTTPS (Caddy): confia nos cabeçalhos X-Forwarded-* para gerar
+      # URLs absolutas https corretas e marca o cookie de sessão como Secure.
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      DATABASE_URL: jdbc:postgresql://db:5432/${DB_NAME:-pratoja}
+      DATABASE_USERNAME: ${DB_USER:-pratoja}
+      DATABASE_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD em deploy/.env}
+      PRATOJA_ADMIN_PASSWORD: ${PRATOJA_ADMIN_PASSWORD:?obrigatório em produção}
+      PRATOJA_PLATFORM_ADMIN_PASSWORD: ${PRATOJA_PLATFORM_ADMIN_PASSWORD:-}
+      PRATOJA_DEMO_MODE: ${PRATOJA_DEMO_MODE:-false}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?ex. https://pratoja.seudominio.com}
+      # Upload fica no volume montado abaixo.
+      PRATOJA_UPLOAD_DIR: /app/data/uploads
+      # E-mail transacional é opcional (desligado por padrão).
+      PRATOJA_MAIL_ENABLED: ${PRATOJA_MAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_BASE_URL: ${MAIL_BASE_URL:-}
+    volumes:
+      - pratoja_uploads:/app/data/uploads
+    networks: [internal, web]
+    # Sem "ports:" — só o Caddy fala com o app (porta 8080 interna).
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PRATOJA_DOMAIN: ${PRATOJA_DOMAIN:?ex. pratoja.seudominio.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [web]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+networks:
+  internal:
+    internal: true
+  web: {}
+
+volumes:
+  pratoja_db:
+  pratoja_uploads:
+  caddy_data:
+  caddy_config:

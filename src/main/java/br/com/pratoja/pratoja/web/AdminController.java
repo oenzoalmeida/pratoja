@@ -63,5 +63,25 @@ public class AdminController {
     private static String bl(String v){if(v==null)return null;String x=v.strip();return x.isEmpty()?null:x;}
     private static boolean isHexOrNull(String v){if(v==null||v.strip().isEmpty())return true;return v.strip().matches("^#[0-9a-fA-F]{6}$");}
 
-    private String saveImage(MultipartFile file)throws Exception{String type=file.getContentType();if(type==null||!List.of("image/jpeg","image/png","image/webp").contains(type))throw new IllegalArgumentException("Use uma imagem JPG, PNG ou WebP.");String ext=switch(type){case"image/png"->".png";case"image/webp"->".webp";default->".jpg";};Path dir=Path.of(uploadDir).toAbsolutePath().normalize();Files.createDirectories(dir);String name=UUID.randomUUID()+ext;file.transferTo(dir.resolve(name));return "/uploads/"+name;}
+    private String saveImage(MultipartFile file)throws Exception{
+        String type=file.getContentType();
+        if(type==null||!List.of("image/jpeg","image/png","image/webp").contains(type))
+            throw new IllegalArgumentException("Use uma imagem JPG, PNG ou WebP.");
+        byte[] bytes=file.getBytes();
+        if(bytes.length==0||bytes.length>5*1024*1024)
+            throw new IllegalArgumentException("A imagem deve ter no máximo 5 MB.");
+        boolean valid=switch(type){
+            case "image/jpeg" -> bytes.length>=3 && (bytes[0]&255)==0xFF && (bytes[1]&255)==0xD8 && (bytes[2]&255)==0xFF;
+            case "image/png" -> bytes.length>=8 && (bytes[0]&255)==0x89 && bytes[1]=='P' && bytes[2]=='N' && bytes[3]=='G' && (bytes[4]&255)==13 && (bytes[5]&255)==10 && (bytes[6]&255)==26 && (bytes[7]&255)==10;
+            case "image/webp" -> bytes.length>=12 && bytes[0]=='R' && bytes[1]=='I' && bytes[2]=='F' && bytes[3]=='F' && bytes[8]=='W' && bytes[9]=='E' && bytes[10]=='B' && bytes[11]=='P';
+            default -> false;
+        };
+        if(!valid)throw new IllegalArgumentException("O conteúdo do arquivo não corresponde a uma imagem JPG, PNG ou WebP válida.");
+        String ext=switch(type){case "image/png"->".png";case "image/webp"->".webp";default->".jpg";};
+        Path dir=Path.of(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(dir);
+        String name=UUID.randomUUID()+ext;
+        Files.write(dir.resolve(name),bytes,StandardOpenOption.CREATE_NEW);
+        return "/uploads/"+name;
+    }
 }

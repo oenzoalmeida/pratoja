@@ -1,0 +1,28 @@
+# Proxy reverso HTTPS do PratoJá. O Caddy obtém e renova certificados TLS
+# gratuitos (Let's Encrypt/ZeroSSL) automaticamente para o domínio informado.
+# HTTP->HTTPS é automático. Requer que {$PRATOJA_DOMAIN} aponte (DNS A/AAAA) para
+# o IP público da instância Oracle e que as portas 80/443 estejam liberadas.
+
+{$PRATOJA_DOMAIN} {
+	encode zstd gzip
+
+	# Cabeçalhos de segurança básicos.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Encaminha para o container da aplicação na rede interna do compose.
+	reverse_proxy app:8080 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Host {host}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -1,0 +1,12 @@
+# Mantém o contexto de build enxuto e evita vazar dados/segredos locais.
+.git
+.github
+target
+data
+docs
+*.md
+.env
+.env.*
+.gitignore
+.gitattributes
+deploy/**/data

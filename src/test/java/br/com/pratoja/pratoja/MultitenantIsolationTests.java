@@ -249,6 +249,40 @@ class MultitenantIsolationTests {
     }
 
     @Test
+    void adminCustomerListShowsOnlyCustomersWithOrdersInOwnStore() throws Exception {
+        Fixture f = fixture();
+        String email = "customer-store2-only@example.com";
+        User customer = users.findByEmailIgnoreCase(email).orElseGet(() -> {
+            User u = new User();
+            u.setName("Cliente Exclusivo Loja Dois");
+            u.setEmail(email);
+            u.setPhone("(11) 90000-0088");
+            u.setPasswordHash(encoder.encode("SenhaForte123"));
+            u.setRole(DomainTypes.Role.CUSTOMER);
+            return users.save(u);
+        });
+        Order order = new Order();
+        order.setStore(f.store2());
+        order.setUser(customer);
+        order.setFulfillmentType(DomainTypes.FulfillmentType.PICKUP);
+        order.setStatus(DomainTypes.OrderStatus.RECEIVED);
+        order.setSubtotal(new BigDecimal("9.90"));
+        order.setDeliveryFee(BigDecimal.ZERO);
+        order.setTotal(new BigDecimal("9.90"));
+        orders.save(order);
+
+        var admin1 = user(f.admin1().getEmail()).roles("STORE_ADMIN");
+        mvc.perform(get("/admin/clientes").with(admin1))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString(email))));
+
+        var admin2 = user(f.admin2().getEmail()).roles("STORE_ADMIN");
+        mvc.perform(get("/admin/clientes").with(admin2))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(email)));
+    }
+
+    @Test
     void platformCreateStoreValidatesUniqueSlug() throws Exception {
         User plat = platformAdmin();
         var platUser = user(plat.getEmail()).roles("PLATFORM_ADMIN");

@@ -10,7 +10,7 @@
 <td data-label="Produtos" th:text="${row.productCount}"></td>
 <td data-label="Pedidos" th:text="${row.orderCount}"></td>
 <td data-label="Admins" th:text="${row.adminCount}"></td>
-<td data-label="Taxa" th:text="${#numbers.formatCurrency(row.store.deliveryFee)}"></td>
+<td data-label="Taxa" th:text="${'R$ ' + #numbers.formatDecimal(row.store.deliveryFee,1,2,'COMMA')}"></td>
 <td data-label="Criada em" th:text="${#temporals.format(row.store.createdAt,'dd/MM/yyyy')}"></td>
 <td data-label="Ações"><form th:action="@{/platform/lojas/{id}/status(id=${row.store.id})}" method="post" data-confirm="Confirma alterar o status desta loja? O público em /loja/{slug} fica indisponível quando desativada."><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-ghost" th:text="${row.store.active} ? 'Desativar' : 'Ativar'"></button></form></td>
 </tr><tr class="table-empty" th:if="${rows.empty}"><td colspan="9">Nenhuma loja cadastrada ainda.</td></tr></tbody></table></div>

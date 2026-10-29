@@ -249,6 +249,28 @@ class MultitenantIsolationTests {
     }
 
     @Test
+    void adminOrderListToleratesLegacyOrderWithoutPayment() throws Exception {
+        // Regressão: pedidos antigos/importados sem registro de Payment derrubavam telas que
+        // listam pedidos (NullPointerException em OrderService.map). A listagem deve renderizar
+        // normalmente e exibir o pedido mesmo sem dados de pagamento.
+        Fixture f = fixture();
+        User cliente = users.findByEmailIgnoreCase("cliente@pratoja.com.br").orElseThrow();
+        Order semPagamento = new Order();
+        semPagamento.setStore(f.store2());
+        semPagamento.setUser(cliente);
+        semPagamento.setFulfillmentType(DomainTypes.FulfillmentType.PICKUP);
+        semPagamento.setStatus(DomainTypes.OrderStatus.RECEIVED);
+        semPagamento.setSubtotal(new BigDecimal("9.90"));
+        semPagamento.setDeliveryFee(BigDecimal.ZERO);
+        semPagamento.setTotal(new BigDecimal("9.90"));
+        semPagamento = orders.save(semPagamento);
+
+        mvc.perform(get("/admin/pedidos").with(user(f.admin2().getEmail()).roles("STORE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("#" + String.format("%04d", semPagamento.getId()))));
+    }
+
+    @Test
     void adminCustomerListShowsOnlyCustomersWithOrdersInOwnStore() throws Exception {
         Fixture f = fixture();
         String email = "customer-store2-only@example.com";

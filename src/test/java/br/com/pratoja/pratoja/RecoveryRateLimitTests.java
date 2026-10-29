@@ -225,7 +225,8 @@ class RecoveryRateLimitTests {
 
         // Janela expira: o mesmo token válido volta a funcionar (prova que não foi consumido)
         limiter.expireAllWindowsForTests();
-        String nova = "Rotacionada" + UUID.randomUUID().toString().substring(0, 6);
+        // Dígito fixo no prefixo: o sufixo aleatório (hex) pode não conter número, e a senha exige um.
+        String nova = "Rotacionada1" + UUID.randomUUID().toString().substring(0, 6);
         mvc.perform(resetPassword("203.0.113.20", rawValid, nova))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/login"));

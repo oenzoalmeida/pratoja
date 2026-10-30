@@ -32,6 +32,7 @@ public class HttpMercadoPagoClient implements MercadoPagoClient {
         body.put("payment_method_id", "pix");
         body.put("external_reference", request.externalReference());
         if (request.notificationUrl() != null) body.put("notification_url", request.notificationUrl());
+        if (request.expiresAtIso() != null) body.put("date_of_expiration", request.expiresAtIso());
         body.put("payer", Map.of("email", request.payerEmail()));
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(props.apiBaseUrl + "/v1/payments"))
                 .timeout(Duration.ofSeconds(20))
@@ -40,6 +41,37 @@ public class HttpMercadoPagoClient implements MercadoPagoClient {
                 .header("X-Idempotency-Key", request.idempotencyKey())
                 .POST(HttpRequest.BodyPublishers.ofString(json(body)));
         return mapPayment(send(builder));
+    }
+
+    @Override
+    public MpPayment createCardPayment(CreateCardPayment request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("transaction_amount", request.amount());
+        body.put("description", request.description());
+        body.put("token", request.cardToken());
+        body.put("payment_method_id", request.paymentMethodId());
+        if (request.issuerId() != null) body.put("issuer_id", request.issuerId());
+        body.put("installments", request.installments());
+        body.put("external_reference", request.externalReference());
+        if (request.notificationUrl() != null) body.put("notification_url", request.notificationUrl());
+        body.put("payer", Map.of("email", request.payerEmail()));
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(props.apiBaseUrl + "/v1/payments"))
+                .timeout(Duration.ofSeconds(20))
+                .header("Authorization", "Bearer " + request.accessToken())
+                .header("Content-Type", "application/json")
+                .header("X-Idempotency-Key", request.idempotencyKey())
+                .POST(HttpRequest.BodyPublishers.ofString(json(body)));
+        return mapPayment(send(builder));
+    }
+
+    @Override
+    public String getPublicKey(String accessToken) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(props.apiBaseUrl + "/users/me"))
+                .timeout(Duration.ofSeconds(20))
+                .header("Authorization", "Bearer " + accessToken)
+                .GET();
+        JsonNode body = send(builder);
+        return body.path("public_key").isMissingNode() ? null : body.path("public_key").asText(null);
     }
 
     @Override
@@ -107,6 +139,7 @@ public class HttpMercadoPagoClient implements MercadoPagoClient {
                 body.path("transaction_amount").decimalValue(),
                 body.path("currency_id").asText(""),
                 body.path("external_reference").isNull() ? null : body.path("external_reference").asText(),
+                body.path("collector_id").isMissingNode() ? null : body.path("collector_id").asLong(),
                 txData.path("qr_code").isMissingNode() ? null : txData.path("qr_code").asText(null),
                 txData.path("qr_code_base64").isMissingNode() ? null : txData.path("qr_code_base64").asText(null),
                 txData.path("ticket_url").isMissingNode() ? null : txData.path("ticket_url").asText(null));

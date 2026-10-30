@@ -4,7 +4,7 @@
   <div th:if="${account != null and account.status.name() == 'CONNECTED'}">
     <p class="detail-row"><svg th:replace="~{fragments :: icon('circle-check','')}"></svg><span>Conta conectada <strong th:text="${'Mercado Pago #' + account.mpUserId}"></strong></span></p>
     <div class="alert error" th:if="${account.mode.name() == 'TEST'}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span><strong>Modo de testes:</strong> as cobranças Pix são simuladas pelo Mercado Pago e nenhum dinheiro real circula. O modo de produção é ativado pela plataforma após a homologação.</span></div>
-    <p class="detail-row"><svg th:replace="~{fragments :: icon('shield-check','')}"></svg><span>Pix com QR Code dinâmico ativo no checkout da sua loja. O dinheiro cai direto na sua conta do Mercado Pago.</span></p>
+    <p class="detail-row"><svg th:replace="~{fragments :: icon('shield-check','')}"></svg><span th:if="${account.mode.name() == 'TEST'}">Pix com QR Code dinâmico ativo no checkout da sua loja. No modo de testes a cobrança é simulada; em produção, o dinheiro cai direto na sua conta do Mercado Pago.</span><span th:if="${account.mode.name() != 'TEST'}">Pix com QR Code dinâmico ativo no checkout da sua loja. O dinheiro cai direto na sua conta do Mercado Pago.</span></p>
     <form action="/admin/pagamentos/mercado-pago/desconectar" method="post" style="margin-top:12px"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-ghost"><svg th:replace="~{fragments :: icon('plug','')}"></svg>Desconectar conta</button></form>
   </div>
   <div th:if="${account == null or account.status.name() != 'CONNECTED'}">

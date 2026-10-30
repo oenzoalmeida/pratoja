@@ -48,6 +48,7 @@ class MercadoPagoIntegrationTests {
     private static final String WEBHOOK_SECRET = "wh-test-secret";
     private static final String CRYPTO_KEY = "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="; // 32 bytes "0123...901"
     private static final String STORE_TOKEN = "TEST-ACCESS-TOKEN-LOJA";
+    private static final long SELLER_ID = 123456789L;
     private static final AtomicLong paymentIds = new AtomicLong(50000);
     private static final Map<String, Map<String, Object>> stubPayments = new ConcurrentHashMap<>();
     private static final Map<String, String> lastAuthByPayment = new ConcurrentHashMap<>();
@@ -60,6 +61,7 @@ class MercadoPagoIntegrationTests {
     @Autowired PaymentRepository payments;
     @Autowired PaymentSecretsService secrets;
     @Autowired ProcessedWebhookEventRepository webhookEvents;
+    @Autowired br.com.pratoja.pratoja.payments.PaymentReconciliationConfig reconciliation;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) throws IOException {
@@ -70,13 +72,16 @@ class MercadoPagoIntegrationTests {
                 long id = paymentIds.incrementAndGet();
                 String ref = extract(body, "external_reference");
                 BigDecimal amount = new BigDecimal(extract(body, "transaction_amount"));
+                boolean card = body.contains("\"token\"");
                 Map<String, Object> state = new ConcurrentHashMap<>();
-                state.put("status", "pending");
+                state.put("collector", SELLER_ID);
+                state.put("status", card ? (body.contains("DECLINED") ? "rejected" : "approved") : "pending");
                 state.put("amount", amount);
                 state.put("ref", ref);
                 stubPayments.put(String.valueOf(id), state);
                 lastAuthByPayment.put(String.valueOf(id), exchange.getRequestHeaders().getFirst("Authorization"));
-                respond(exchange, 201, paymentJson(id, "pending", amount, ref, true));
+                respond(exchange, 201, paymentJson(id, (String) state.get("status"), amount, ref, !card,
+                        (Long) state.get("collector")));
             } else {
                 String path = exchange.getRequestURI().getPath();
                 String id = path.substring(path.lastIndexOf('/') + 1);
@@ -84,9 +89,12 @@ class MercadoPagoIntegrationTests {
                 if (state == null) { respond(exchange, 404, "{\"error\":\"not_found\"}"); return; }
                 lastAuthByPayment.put(id, exchange.getRequestHeaders().getFirst("Authorization"));
                 respond(exchange, 200, paymentJson(Long.parseLong(id), (String) state.get("status"),
-                        (BigDecimal) state.get("amount"), (String) state.get("ref"), false));
+                        (BigDecimal) state.get("amount"), (String) state.get("ref"), false,
+                        (Long) state.get("collector")));
             }
         });
+        stub.createContext("/users/me", exchange ->
+                respond(exchange, 200, "{\"id\":99887766,\"public_key\":\"TEST-pub-key-123\"}"));
         stub.start();
         registry.add("pratoja.mp.api-base-url", () -> "http://localhost:" + stub.getAddress().getPort());
         registry.add("pratoja.mp.client-id", () -> "test-client-id");
@@ -108,10 +116,12 @@ class MercadoPagoIntegrationTests {
         return rest.replaceAll("[,}].*$", "").trim();
     }
 
-    private static String paymentJson(long id, String status, BigDecimal amount, String ref, boolean withQr) {
+    private static String paymentJson(long id, String status, BigDecimal amount, String ref, boolean withQr,
+                                      Long collector) {
         StringBuilder json = new StringBuilder();
         json.append("{\"id\":").append(id).append(",\"status\":\"").append(status).append("\"")
             .append(",\"transaction_amount\":").append(amount)
+            .append(",\"collector_id\":").append(collector)
             .append(",\"currency_id\":\"BRL\",\"external_reference\":\"").append(ref).append("\"");
         if (withQr) json.append(",\"point_of_interaction\":{\"transaction_data\":{")
             .append("\"qr_code\":\"000201STUBCOPIAECOLA").append(id)
@@ -159,6 +169,7 @@ class MercadoPagoIntegrationTests {
         account.setStatus(StorePaymentAccount.Status.CONNECTED);
         account.setMode(StorePaymentAccount.Mode.TEST);
         account.setMpUserId("123456789");
+        account.setPublicKey("TEST-pub-key-123");
         account.setAccessTokenEnc(secrets.encrypt(STORE_TOKEN));
         accounts.save(account);
     }
@@ -299,6 +310,115 @@ class MercadoPagoIntegrationTests {
         assertEquals(DomainTypes.PaymentStatus.CONFIRMED, payment.getStatus());
         assertNull(payment.getReference());
         connectStore(); // reestabelece para os demais testes
+    }
+
+    private Long placeCardOrder() throws Exception {
+        MvcResult added = mvc.perform(post("/loja/restaurante/api/cart/items").with(csrf())
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productId\":1,\"quantity\":1,\"optionIds\":[],\"notes\":\"\"}"))
+                .andExpect(status().isOk()).andReturn();
+        MockHttpSession session = (MockHttpSession) added.getRequest().getSession(false);
+        MvcResult checkout = mvc.perform(post("/loja/restaurante/checkout").with(csrf())
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")).session(session)
+                        .param("fulfillment", "PICKUP").param("paymentMethod", "CARD"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        String location = checkout.getResponse().getRedirectedUrl();
+        assertNotNull(location);
+        assertTrue(location.endsWith("/pagamento"), "Cartao em loja conectada deve ir para a tela de pagamento, foi: " + location);
+        return Long.parseLong(location.replaceAll(".*/pedidos/(\\d+)/pagamento$", "$1"));
+    }
+
+    @Test
+    void cardChargeApprovedConfirmsImmediately() throws Exception {
+        connectStore();
+        Long orderId = placeCardOrder();
+        Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
+        assertEquals(DomainTypes.PaymentStatus.PENDING, payment.getStatus());
+        assertEquals(DomainTypes.PaymentMethod.CARD, payment.getMethod());
+
+        // A tela mostra o formulario de cartao com a public key da loja
+        mvc.perform(get("/loja/restaurante/pedidos/" + orderId + "/pagamento")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("card-form")))
+                .andExpect(content().string(containsString("TEST-pub-key-123")));
+
+        mvc.perform(post("/loja/restaurante/pedidos/" + orderId + "/pagamento/cartao").with(csrf())
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER"))
+                        .param("token", "tok_approved").param("paymentMethodId", "master")
+                        .param("issuerId", "24").param("installments", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/loja/restaurante/pedidos/" + orderId + "/acompanhar"));
+
+        payment = payments.findById(payment.getId()).orElseThrow();
+        assertEquals(DomainTypes.PaymentStatus.CONFIRMED, payment.getStatus());
+        assertEquals("approved", payment.getMpStatus());
+        assertEquals(DomainTypes.OrderStatus.CONFIRMED, orders.findById(orderId).orElseThrow().getStatus());
+        assertEquals("Bearer " + STORE_TOKEN, lastAuthByPayment.get(payment.getMpPaymentId()),
+                "A cobranca de cartao deve usar o token DA LOJA");
+    }
+
+    @Test
+    void cardDeclinedStaysPendingAndDoesNotReachKitchen() throws Exception {
+        connectStore();
+        Long orderId = placeCardOrder();
+        mvc.perform(post("/loja/restaurante/pedidos/" + orderId + "/pagamento/cartao").with(csrf())
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER"))
+                        .param("token", "DECLINED").param("paymentMethodId", "visa").param("installments", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/loja/restaurante/pedidos/" + orderId + "/pagamento"));
+        Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
+        assertEquals(DomainTypes.PaymentStatus.PENDING, payment.getStatus());
+        assertEquals("rejected", payment.getMpStatus());
+        assertEquals(DomainTypes.OrderStatus.RECEIVED, orders.findById(orderId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void collectorFromAnotherAccountDoesNotConfirm() throws Exception {
+        connectStore();
+        Long orderId = placePixOrder();
+        mvc.perform(get("/loja/restaurante/pedidos/" + orderId + "/pagamento")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isOk());
+        Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
+        // A API passa a relatar o pagamento em OUTRA conta (collector divergente): nao pode confirmar
+        stubPayments.get(payment.getMpPaymentId()).put("collector", 999999L);
+        stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
+        postWebhook(payment.getMpPaymentId(), 900010L);
+        assertEquals(DomainTypes.PaymentStatus.PENDING, payments.findById(payment.getId()).orElseThrow().getStatus());
+        assertEquals(DomainTypes.OrderStatus.RECEIVED, orders.findById(orderId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void expiredPixCancelsPaymentAndOrder() throws Exception {
+        connectStore();
+        Long orderId = placePixOrder();
+        mvc.perform(get("/loja/restaurante/pedidos/" + orderId + "/pagamento")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isOk());
+        Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
+        stubPayments.get(payment.getMpPaymentId()).put("status", "expired");
+        postWebhook(payment.getMpPaymentId(), 900011L);
+        assertEquals(DomainTypes.PaymentStatus.CANCELLED, payments.findById(payment.getId()).orElseThrow().getStatus());
+        assertEquals(DomainTypes.OrderStatus.CANCELLED, orders.findById(orderId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void reconcilerSyncsStalePendingPayment() throws Exception {
+        connectStore();
+        Long orderId = placePixOrder();
+        mvc.perform(get("/loja/restaurante/pedidos/" + orderId + "/pagamento")
+                        .with(user("cliente@pratoja.com.br").roles("CUSTOMER")))
+                .andExpect(status().isOk());
+        Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
+        payment.setCreatedAt(java.time.LocalDateTime.now().minusMinutes(45));
+        payments.save(payment);
+        stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
+        // Sem webhook: o reconciliador re-consulta a API e confirma pelo mesmo caminho validado
+        reconciliation.reconcile();
+        assertEquals(DomainTypes.PaymentStatus.CONFIRMED, payments.findById(payment.getId()).orElseThrow().getStatus());
+        assertEquals(DomainTypes.OrderStatus.CONFIRMED, orders.findById(orderId).orElseThrow().getStatus());
     }
 
     @Test

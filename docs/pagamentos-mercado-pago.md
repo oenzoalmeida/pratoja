@@ -6,21 +6,31 @@ em **modo demonstração** (confirmação simulada) e o dinheiro na entrega cont
 
 ## Fluxo do cliente (loja conectada)
 
-1. Checkout com PIX cria o pedido com pagamento `PENDING` + referência única (UUID).
-2. A tela `/loja/{slug}/pedidos/{id}/pagamento` cria a cobrança na API do MP
-   (idempotente pela referência) e mostra QR dinâmico + copia-e-cola.
-3. A confirmação chega pelo **webhook** `/webhooks/mercadopago` e o pedido avança
-   RECEBIDO → CONFIRMADO automaticamente (SSE atualiza painel e cliente).
-4. O botão "Já paguei, verificar" faz a mesma verificação pela API (fallback sem webhook).
+1. Checkout com PIX ou CARTÃO cria o pedido com pagamento `PENDING` + referência única (UUID).
+2. Pix: a tela `/loja/{slug}/pedidos/{id}/pagamento` cria a cobrança na API do MP
+   (idempotente pela referência, expiração de 2h) e mostra QR dinâmico + copia-e-cola.
+3. Cartão: a mesma tela tokeniza o cartão NO NAVEGADOR via MercadoPago.js (public key da loja)
+   e envia apenas o token ao servidor — dados de cartão nunca passam pelo PratoJá.
+4. A confirmação chega pelo **webhook** `/webhooks/mercadopago` (ou pela resposta da criação,
+   no cartão) e o pedido avança RECEBIDO → CONFIRMADO automaticamente (SSE).
+5. O botão "Já paguei, verificar" e o **reconciliador agendado** (15min) re-sincronizam
+   pela API — cobrem webhook perdido e falhas de entrega.
 
 ## Defesas implementadas (webhook → cozinha)
 
 - Assinatura `x-signature` HMAC-SHA256 validada (janela de 5 min) — sem segredo configurado o endpoint falha fechado (503).
 - O POST nunca é confiado: o estado é **re-consultado na API** com o token da loja dona do pagamento.
-- Conferência de `external_reference` == referência do pedido, **valor** == total e **moeda** == BRL antes de confirmar.
-- Idempotência por chave única `(provider, event_key)` (id de evento do MP) — reenvio não reprocessa.
-- Estorno/cancelamento/chargeback cancelam pagamento e pedido (se ainda não entregue); webhooks fora de ordem são tolerados.
+- Conferência de `external_reference` == referência do pedido, **valor** == total, **moeda** == BRL e
+  **collector_id** == conta conectada da loja antes de confirmar.
+- Idempotência por chave única `(provider, event_key)` (id de evento do MP). O evento só é marcado
+  APÓS o processamento: falha na API do MP gera 500 e o provedor reenvia (nada se perde).
+  Entregas simultâneas convergem porque as mutações de estado são idempotentes.
+- Estorno/cancelamento/chargeback/expiração cancelam pagamento e pedido (se ainda não entregue);
+  eventos fora de ordem são tolerados.
 - Tokens OAuth das lojas criptografados com AES-256-GCM (`PRATOJA_PAYMENTS_CRYPTO_KEY`); falha fechada sem a chave.
+- Política de modo: conexão em modo TEST **só aceita credencial de teste do MP (`TEST-...`)** e PRODUCTION
+  só `APP_USR-...` — verificado na conexão E a cada uso; impossível cobrar de verdade sob modo de testes.
+- Só o status `approved` (validado) confirma pagamento e avança o pedido para a cozinha.
 
 ## Variáveis de ambiente (servidor)
 
@@ -43,8 +53,11 @@ em **modo demonstração** (confirmação simulada) e o dinheiro na entrega cont
 
 ## Limites desta etapa (documentados)
 
-- **Cartão online não implementado** — no checkout o cartão segue simulado; Pix e dinheiro são os caminhos reais.
 - E2E com credenciais sandbox reais do MP e entrega real de webhook depende da ativação acima;
   os testes automatizados cobrem o fluxo completo contra um servidor stub da API (assinatura, idempotência,
-  divergência de valor, estorno, isolamento por loja).
+  divergência de valor/collector, estorno, expiração, reconciliação, cartão aprovado/recusado,
+  isolamento por loja). A tokenização do cartão no navegador (MercadoPago.js) só pode ser
+  exercida de ponta a ponta com uma public key de teste real.
+- Parcelamento real (tabela de parcelas/issuer) hoje assume 1x; o fluxo de issuer/installments
+  completo é refinado na homologação com credenciais reais.
 - Conciliação/relatório de pagamentos no admin: etapa futura (hoje o status fica no pedido e no histórico).

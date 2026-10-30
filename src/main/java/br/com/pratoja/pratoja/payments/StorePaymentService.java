@@ -56,13 +56,18 @@ public class StorePaymentService {
     public void connect(Store store, String code) {
         if (!oauthReady()) throw new IllegalStateException("Integracao Mercado Pago nao configurada no servidor.");
         MercadoPagoClient.MpToken token = client.exchangeCode(code, callbackUrl());
+        assertTokenMatchesMode(parseMode(props.defaultMode), token.accessToken());
+        String publicKey = token.publicKey();
+        if (publicKey == null) {
+            try { publicKey = client.getPublicKey(token.accessToken()); } catch (Exception ignored) { /* cartao fica indisponivel ate o proximo connect */ }
+        }
         StorePaymentAccount account = accounts.findByStore_Id(store.getId()).orElseGet(StorePaymentAccount::new);
         account.setStore(store);
         account.setProvider(StorePaymentAccount.Provider.MERCADO_PAGO);
         account.setMode(parseMode(props.defaultMode));
         account.setStatus(StorePaymentAccount.Status.CONNECTED);
         account.setMpUserId(token.userId() == null ? null : String.valueOf(token.userId()));
-        account.setPublicKey(token.publicKey());
+        account.setPublicKey(publicKey);
         account.setAccessTokenEnc(secrets.encrypt(token.accessToken()));
         if (token.refreshToken() != null) account.setRefreshTokenEnc(secrets.encrypt(token.refreshToken()));
         account.setTokenExpiresAt(LocalDateTime.now().plusSeconds(Math.max(token.expiresInSeconds() - 300, 60)));
@@ -100,7 +105,22 @@ public class StorePaymentService {
             account.setUpdatedAt(LocalDateTime.now());
             accounts.save(account);
         }
-        return secrets.decrypt(account.getAccessTokenEnc());
+        String accessToken = secrets.decrypt(account.getAccessTokenEnc());
+        // Defesa em profundidade: token incompativel com o modo da conexao nao pode cobrar.
+        assertTokenMatchesMode(account.getMode(), accessToken);
+        return accessToken;
+    }
+
+    /** Modo TEST so aceita credencial de teste do MP (TEST-...); PRODUCTION so APP_USR-....
+     *  Impede cobranca real sob sinalizacao de teste (e vice-versa). */
+    static void assertTokenMatchesMode(StorePaymentAccount.Mode mode, String accessToken) {
+        if (accessToken == null) throw new IllegalStateException("Token de pagamento ausente.");
+        boolean testToken = accessToken.startsWith("TEST-");
+        boolean prodToken = accessToken.startsWith("APP_USR-");
+        if (mode == StorePaymentAccount.Mode.TEST && !testToken)
+            throw new IllegalStateException("Conta em modo de testes exige credencial de TESTE do Mercado Pago.");
+        if (mode == StorePaymentAccount.Mode.PRODUCTION && !prodToken)
+            throw new IllegalStateException("Conta em modo de producao exige credencial de PRODUCAO do Mercado Pago.");
     }
 
     /** Exibicao no admin sem expor dados sensiveis. */

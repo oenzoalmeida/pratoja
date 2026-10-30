@@ -3,6 +3,7 @@ package br.com.pratoja.pratoja.config;
 import br.com.pratoja.pratoja.domain.*;
 import br.com.pratoja.pratoja.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -18,6 +19,10 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository users; private final CategoryRepository categories; private final ProductRepository products;
     private final OptionGroupRepository groups; private final ProductOptionRepository options; private final PasswordEncoder encoder;
     private final StoreRepository stores;
+
+    // Conta de demonstração conhecida (cliente@pratoja.com.br / Cliente@123) só faz sentido em
+    // ambiente de demonstração: em produção (demo-mode=false) ela NÃO é criada.
+    @Value("${pratoja.demo-mode:true}") private boolean demoMode;
 
     @Override @Transactional public void run(String... args) {
         // A senha administrativa vem exclusivamente de PRATOJA_ADMIN_PASSWORD (nenhum padrão embutido).
@@ -43,7 +48,7 @@ public class DataSeeder implements CommandLineRunner {
         final String platformPassword = System.getenv("PRATOJA_PLATFORM_ADMIN_PASSWORD");
         if (platformPassword != null && !platformPassword.isBlank())
             seedUser("Plataforma", "platform@pratoja.com.br", "(11) 99999-0000", platformPassword, DomainTypes.Role.PLATFORM_ADMIN, null);
-        seedUser("Cliente Demonstração", "cliente@pratoja.com.br", "(11) 98888-2000", "Cliente@123", DomainTypes.Role.CUSTOMER, null);
+        if (demoMode)         seedUser("Cliente Demonstração", "cliente@pratoja.com.br", "(11) 98888-2000", "Cliente@123", DomainTypes.Role.CUSTOMER, null);
         if (categories.count() > 0) return;
         Category pratos = category(loja, "Pratos executivos", 1); Category lanches = category(loja, "Lanches", 2); Category bebidas = category(loja, "Bebidas", 3); Category monte = category(loja, "Monte seu prato", 0);
         product(pratos, "Frango grelhado da casa", "File de frango suculento, arroz, feijao e salada fresca.", "32.90", "/images/frango.jpg", true, false);

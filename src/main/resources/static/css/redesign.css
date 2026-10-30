@@ -191,3 +191,39 @@ body{background:var(--cream)}
 .step-grid h3{order:2;flex:1;margin:0}
 .step-grid b{order:3;margin:0}
 .step-grid p{order:4;flex-basis:100%;margin:2px 0 0 58px}
+
+/* ===== Identidade v2 — cardápio (proposta) ===== */
+.menu-page .page-intro{text-align:left;max-width:860px;margin:0 0 44px;padding-top:6px}
+.menu-page .page-intro .eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--orange)}
+.menu-page .page-intro .eyebrow:before{content:'';width:34px;height:2px;background:var(--orange)}
+.menu-page .page-intro h1{font-size:clamp(46px,6.5vw,80px);margin:16px 0 14px}
+.menu-page .page-intro h1 em{font-style:italic;color:var(--orange)}
+.menu-page .page-intro p{font-size:17px;max-width:52ch}
+.menu-page .menu-tools{align-items:stretch}
+.menu-page .search{margin:0;max-width:none;border-radius:999px;border-color:var(--ink-a14);background:var(--paper)}
+.menu-page .chips{justify-content:flex-start}
+.menu-page .chips a{border-color:var(--ink-a14);color:var(--ink)}
+.menu-page .chips a:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
+.menu-page .chips a.active{background:var(--ink);border-color:var(--ink);color:var(--cream)}
+.menu-page .menu-grid{gap:28px}
+.menu-page .product-card{border:1px solid var(--line);border-radius:20px;box-shadow:none}
+.menu-page .product-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px var(--ink-a10)}
+.menu-page .product-image{height:auto;aspect-ratio:4/3;background:linear-gradient(135deg,var(--tint-warm),var(--lime))}
+.menu-page .product-info small{text-transform:uppercase;letter-spacing:.12em;font-size:11px}
+.menu-page .product-info h3{font-size:23px;font-weight:700;letter-spacing:-.01em}
+.menu-page .product-footer>strong{font-size:21px;font-weight:700;color:var(--ink)}
+.menu-page .product-action{border-radius:999px;background:var(--ink);color:var(--cream);padding:10px 16px}
+.menu-page .product-action:hover{background:var(--orange);color:#fff}
+.menu-page .empty{border-radius:20px}
+@media(max-width:600px){
+  .menu-page .product-image{aspect-ratio:auto;height:100%;min-height:150px}
+  .menu-page .page-intro h1{font-size:clamp(38px,11vw,46px)}
+  .menu-page .product-info h3{font-size:19px}
+  .menu-page .product-footer>strong{font-size:18px}
+}
+
+/* Fix: quebra a circularidade aspect-ratio + altura percentual da imagem (foto cobre o card inteiro) */
+.product-image{position:relative}
+.product-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.detail-image{position:relative}
+.detail-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}

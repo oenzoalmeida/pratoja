@@ -5,9 +5,9 @@
    Mantém var(--orange): a marca da loja segue configurável.
    ============================================================ */
 :root{
-  --cream:#fff7ef;
-  --ink:#1d2422;
-  --muted:#5f6e69;
+  --cream:#f4f0e6;
+  --ink:#1a241e;
+  --muted:#66716a;
   --radius:20px;
   --shadow:0 14px 34px rgba(29,36,34,.10);
   --shadow-sm:0 6px 16px rgba(29,36,34,.08);
@@ -192,38 +192,52 @@ body{background:var(--cream)}
 .step-grid b{order:3;margin:0}
 .step-grid p{order:4;flex-basis:100%;margin:2px 0 0 58px}
 
-/* ===== Identidade v2 — cardápio (proposta) ===== */
-.menu-page .page-intro{text-align:left;max-width:860px;margin:0 0 44px;padding-top:6px}
+/* ===== Identidade v3 - direcao botanica editorial (proposta 2) ===== */
+:root{--star:#e0a83c;--butter:#e0a83c}
+.site-header{background:var(--ink);color:var(--cream);border-bottom:0}
+.site-header .brand-mark{background:var(--butter);color:var(--ink)!important}
+.site-header .desktop-nav a:hover{color:var(--butter)}
+.site-header .cart-link strong{background:var(--butter);color:var(--ink)}
+.site-header .btn-outline{border-color:var(--cream);color:var(--cream)}
+.site-header .btn-primary{background:var(--butter);color:var(--ink);box-shadow:none}
+.site-header .btn-primary:hover{background:#c9922c}
+.menu-page .page-intro{text-align:left;max-width:900px;margin:0 0 30px;padding-top:14px}
 .menu-page .page-intro .eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--orange)}
-.menu-page .page-intro .eyebrow:before{content:'';width:34px;height:2px;background:var(--orange)}
-.menu-page .page-intro h1{font-size:clamp(46px,6.5vw,80px);margin:16px 0 14px}
+.menu-page .page-intro .eyebrow:before{content:'';width:34px;height:2px;background:var(--butter)}
+.menu-page .page-intro h1{font-size:clamp(52px,7vw,92px);font-weight:400;margin:14px 0 12px;letter-spacing:-.01em}
 .menu-page .page-intro h1 em{font-style:italic;color:var(--orange)}
 .menu-page .page-intro p{font-size:17px;max-width:52ch}
-.menu-page .menu-tools{align-items:stretch}
-.menu-page .search{margin:0;max-width:none;border-radius:999px;border-color:var(--ink-a14);background:var(--paper)}
-.menu-page .chips{justify-content:flex-start}
-.menu-page .chips a{border-color:var(--ink-a14);color:var(--ink)}
-.menu-page .chips a:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
-.menu-page .chips a.active{background:var(--ink);border-color:var(--ink);color:var(--cream)}
-.menu-page .menu-grid{gap:28px}
-.menu-page .product-card{border:1px solid var(--line);border-radius:20px;box-shadow:none}
-.menu-page .product-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px var(--ink-a10)}
-.menu-page .product-image{height:auto;aspect-ratio:4/3;background:linear-gradient(135deg,var(--tint-warm),var(--lime))}
-.menu-page .product-info small{text-transform:uppercase;letter-spacing:.12em;font-size:11px}
-.menu-page .product-info h3{font-size:23px;font-weight:700;letter-spacing:-.01em}
-.menu-page .product-footer>strong{font-size:21px;font-weight:700;color:var(--ink)}
-.menu-page .product-action{border-radius:999px;background:var(--ink);color:var(--cream);padding:10px 16px}
+.menu-page .menu-tools{gap:16px;margin-bottom:44px}
+.menu-page .search{margin:0;max-width:none;background:transparent;border:0;border-bottom:2px solid var(--ink);border-radius:0;padding:0 4px}
+.menu-page .search input{padding:12px 0;font-size:16px}
+.menu-page .search .icon{color:var(--ink)}
+.menu-page .search:focus-within{border-color:var(--orange);box-shadow:none}
+.menu-page .chips{justify-content:flex-start;gap:22px;border-bottom:1px solid var(--line)}
+.menu-page .chips a{border:0;background:transparent;padding:10px 2px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.menu-page .chips a:hover{background:transparent;color:var(--ink)}
+.menu-page .chips a.active{background:transparent;color:var(--ink);border-bottom-color:var(--butter)}
+.menu-page .menu-grid{gap:34px 26px}
+.menu-page .product-card{border:0;background:transparent;border-radius:0;overflow:visible}
+.menu-page .product-card:hover{transform:none;box-shadow:none}
+.menu-page .product-card:hover .product-image img{transform:scale(1.04)}
+.menu-page .product-image{height:auto;aspect-ratio:4/3;border-radius:16px;overflow:hidden;position:relative;background:var(--lime)}
+.menu-page .product-info{padding:14px 2px 4px}
+.menu-page .product-info small{text-transform:uppercase;letter-spacing:.13em;font-size:11px;color:var(--orange)}
+.menu-page .product-info h3{font-size:26px;font-weight:400;letter-spacing:0;margin:4px 0 2px}
+.menu-page .product-info p{font-size:14px;min-height:40px}
+.menu-page .product-footer{padding:2px 2px 0}
+.menu-page .product-footer>strong{font-size:21px;font-weight:400;color:var(--ink)}
+.menu-page .product-action{border-radius:999px;background:var(--ink);color:var(--cream);padding:10px 18px}
 .menu-page .product-action:hover{background:var(--orange);color:#fff}
-.menu-page .empty{border-radius:20px}
+.menu-page .empty{border:0;background:transparent}
 @media(max-width:600px){
-  .menu-page .product-image{aspect-ratio:auto;height:100%;min-height:150px}
-  .menu-page .page-intro h1{font-size:clamp(38px,11vw,46px)}
-  .menu-page .product-info h3{font-size:19px}
-  .menu-page .product-footer>strong{font-size:18px}
+  .menu-page .page-intro h1{font-size:clamp(42px,12vw,54px)}
+  .menu-page .menu-grid{gap:22px 14px}
+  .menu-page .product-info h3{font-size:20px}
+  .menu-page .product-footer>strong{font-size:17px}
+  .menu-page .chips{gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
 }
 
-/* Fix: quebra a circularidade aspect-ratio + altura percentual da imagem (foto cobre o card inteiro) */
-.product-image{position:relative}
-.product-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.detail-image{position:relative}
-.detail-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* fix: imagens sempre preenchem o quadro (bug da faixa branca) */
+.product-image,.detail-image{position:relative}
+.product-image img,.detail-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}

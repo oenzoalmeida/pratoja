@@ -22,7 +22,7 @@
 <label>Prova social / tempo de entrega<input name="deliveryTimeNote" maxlength="120" th:value="${settings.deliveryTimeNote}" placeholder="Entrega em 35–50 min"></label>
 <label class="span-2">Subtítulo da página inicial<textarea name="heroSubtitle" maxlength="400" th:text="${settings.heroSubtitle}" placeholder="Frase de apoio exibida abaixo do título da home"></textarea></label>
 <label>Taxa de entrega (R$)<input type="number" name="deliveryFee" required step="0.01" min="0" th:value="${settings.deliveryFee}" placeholder="0,00"></label>
-<label>Cor principal<input name="brandPrimary" maxlength="7" th:value="${settings.brandPrimary}" placeholder="#ef5b2a" pattern="^#[0-9a-fA-F]{6}$"></label>
-<label>Cor principal (escura)<input name="brandPrimaryDark" maxlength="7" th:value="${settings.brandPrimaryDark}" placeholder="#d94717" pattern="^#[0-9a-fA-F]{6}$"></label>
+<label>Cor principal<input name="brandPrimary" maxlength="7" th:value="${settings.brandPrimary}" placeholder="#1e4d38" pattern="^#[0-9a-fA-F]{6}$"></label>
+<label>Cor principal (escura)<input name="brandPrimaryDark" maxlength="7" th:value="${settings.brandPrimaryDark}" placeholder="#123325" pattern="^#[0-9a-fA-F]{6}$"></label>
 <div class="span-2 form-actions"><a class="btn btn-ghost" href="/admin">Cancelar</a><button class="btn btn-primary btn-lg"><svg th:replace="~{fragments :: icon('save','')}"></svg>Salvar configurações</button></div></form>
 </main></div></body></html>

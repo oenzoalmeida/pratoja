@@ -52,7 +52,7 @@ public class AdminController {
             Store s=store(auth);
             if(name==null||name.strip().length()<2)throw new IllegalArgumentException("Informe o nome do restaurante (mínimo de 2 caracteres).");
             if(deliveryFee==null||deliveryFee.signum()<0)throw new IllegalArgumentException("A taxa de entrega deve ser maior ou igual a zero.");
-            if(!isHexOrNull(brandPrimary)||!isHexOrNull(brandPrimaryDark))throw new IllegalArgumentException("As cores devem estar no formato hexadecimal #RRGGBB (ex.: #ef5b2a).");
+            if(!isHexOrNull(brandPrimary)||!isHexOrNull(brandPrimaryDark))throw new IllegalArgumentException("As cores devem estar no formato hexadecimal #RRGGBB (ex.: #1e4d38).");
             s.setName(name.strip());s.setSlogan(bl(slogan));s.setDescription(bl(description));s.setPhone(bl(phone));s.setWhatsapp(bl(whatsapp));s.setEmail(bl(email));
             s.setAddressStreet(bl(addressStreet));s.setAddressNumber(bl(addressNumber));s.setAddressComplement(bl(addressComplement));s.setAddressNeighborhood(bl(addressNeighborhood));s.setAddressCity(bl(addressCity));s.setAddressState(bl(addressState));s.setAddressZip(bl(addressZip));
             s.setOpeningHours(openingHours==null?"":openingHours.strip());s.setHeroTitle(bl(heroTitle));s.setHeroSubtitle(bl(heroSubtitle));s.setDeliveryTimeNote(bl(deliveryTimeNote));

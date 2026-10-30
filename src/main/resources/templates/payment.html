@@ -1,6 +1,6 @@
-<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão — ' : 'Pagamento Pix — '}+${store.name}">Pagamento</title><th:block th:replace="~{fragments :: storeHead}"></th:block><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/redesign.css"></head>
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão — ' : 'Pagamento Pix — '}+${store.name}">Pagamento</title><th:block th:replace="~{fragments :: storeHead}"></th:block><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/redesign.css"><style>.mp-secure-field{height:44px;border:1.5px solid #d9d9d9;border-radius:10px;padding:10px 12px;background:#fff;box-sizing:border-box}.mp-secure-field:focus-within{border-color:#ff7a1a}</style></head>
 <body><header th:replace="~{fragments :: header}"></header><main class="page-shell">
-<section class="tracking-head"><div><span class="eyebrow" th:text="'Pedido '+${order.number()}">Pedido</span><h1 th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão' : 'Pagamento via Pix'}"></h1><p><svg th:replace="~{fragments :: icon('clock','')}"></svg><span th:text="${payment.method.name() == 'CARD' ? 'Seus dados de cartão são criptografados no seu navegador pelo Mercado Pago.' : 'Escaneie o QR Code ou use o copia e cola para concluir.'}"></span></p></div></section>
+<section class="tracking-head"><div><span class="eyebrow" th:text="'Pedido '+${order.number()}">Pedido</span><h1 th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão' : 'Pagamento via Pix'}"></h1><p><svg th:replace="~{fragments :: icon('clock','')}"></svg><span th:text="${payment.method.name() == 'CARD' ? 'Os campos do cartão são protegidos pelo Mercado Pago.' : 'Escaneie o QR Code ou use o copia e cola para concluir.'}"></span></p></div></section>
 <div class="alert error" th:if="${error}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span th:text="${error}"></span></div>
 <div class="alert error" th:if="${testMode}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span>Ambiente de testes do Mercado Pago: nenhuma cobrança real é feita.</span></div>
 <!-- Pix: QR dinamico + copia e cola -->
@@ -22,18 +22,17 @@
     <input type="hidden" name="token" id="card-token">
     <input type="hidden" name="paymentMethodId" id="card-payment-method">
     <input type="hidden" name="issuerId" id="card-issuer">
-    <label>Número do cartão<input id="card-number" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" required></label>
+    <label>Número do cartão<div id="mp-card-number" class="mp-secure-field"></div></label>
     <label>Nome impresso no cartão<input id="card-holder" autocomplete="cc-name" required></label>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-      <label>Mês<input id="card-exp-month" inputmode="numeric" placeholder="MM" maxlength="2" required></label>
-      <label>Ano<input id="card-exp-year" inputmode="numeric" placeholder="AAAA" maxlength="4" required></label>
-      <label>CVV<input id="card-cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label>Validade<div id="mp-expiration-date" class="mp-secure-field"></div></label>
+      <label>CVV<div id="mp-security-code" class="mp-secure-field"></div></label>
     </div>
     <label>CPF do titular<input id="card-doc" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" required></label>
     <label>Parcelas<select id="card-installments" name="installments"><option value="1">1x sem juros</option></select></label>
     <div class="alert error" id="card-error" hidden></div>
     <button class="btn btn-primary btn-lg" type="submit"><svg th:replace="~{fragments :: icon('credit-card','')}"></svg>Pagar <span th:text="${'R$ ' + #numbers.formatDecimal(order.total,1,2,'COMMA')}"></span></button>
-    <p style="font-size:.8rem;color:#666;display:flex;gap:6px;align-items:center"><svg th:replace="~{fragments :: icon('shield-check','')}"></svg>Processado pelo Mercado Pago. O PratoJá não vê nem guarda os dados do seu cartão.</p>
+    <p style="font-size:.8rem;color:#666;display:flex;gap:6px;align-items:center"><svg th:replace="~{fragments :: icon('shield-check','')}"></svg>Número, validade e CVV são digitados direto nos campos seguros do Mercado Pago e nunca passam pelo PratoJá.</p>
   </form>
 </section>
 </main><nav th:replace="~{fragments :: mobileNav}"></nav>
@@ -44,29 +43,30 @@
   var form = document.getElementById('card-form');
   function fail(msg){ var el = document.getElementById('card-error'); el.hidden = false; el.textContent = msg; }
   if (typeof MercadoPago === 'undefined') { fail('Não foi possível carregar o serviço de pagamento. Verifique sua conexão e recarregue.'); form.querySelector('button').disabled = true; return; }
-  var mp = new MercadoPago(publicKey, {locale: 'pt-BR'});
-  form.addEventListener('submit', function(ev){
-    ev.preventDefault();
-    form.querySelector('button').disabled = true;
-    mp.createCardToken({
-      cardNumber: document.getElementById('card-number').value.replace(/\s/g, ''),
-      cardholderName: document.getElementById('card-holder').value,
-      cardExpirationMonth: document.getElementById('card-exp-month').value,
-      cardExpirationYear: document.getElementById('card-exp-year').value,
-      securityCode: document.getElementById('card-cvv').value,
-      identificationType: 'CPF',
-      identificationNumber: document.getElementById('card-doc').value.replace(/\D/g, '')
-    }).then(function(token){
-      document.getElementById('card-token').value = token.id;
-      return mp.getPaymentMethods({bin: token.first_six_digits});
-    }).then(function(pm){
+  var mp = new MercadoPago(publicKey, {locale: 'pt-BR', trackingDisabled: true});
+  var fieldStyle = {fontFamily: 'inherit', fontSize: '16px', color: '#1a1a1a', placeholderColor: '#9a9a9a'};
+  var cardNumberField = mp.fields.create('cardNumber', {placeholder: '0000 0000 0000 0000', style: fieldStyle}).mount('mp-card-number');
+  mp.fields.create('expirationDate', {placeholder: 'MM/AA', mode: 'short', style: fieldStyle}).mount('mp-expiration-date');
+  mp.fields.create('securityCode', {placeholder: 'CVV', style: fieldStyle}).mount('mp-security-code');
+  cardNumberField.on('binChange', function(ev){
+    if (!ev || !ev.bin) { document.getElementById('card-payment-method').value = ''; document.getElementById('card-issuer').value = ''; return; }
+    mp.getPaymentMethods({bin: ev.bin}).then(function(pm){
       var r = pm.results && pm.results[0];
       if (r) {
         document.getElementById('card-payment-method').value = r.id;
         if (r.issuer) document.getElementById('card-issuer').value = r.issuer.id;
-        if (!document.getElementById('card-payment-method').value && r.payment_type_id)
-          document.getElementById('card-payment-method').value = r.id;
       }
+    }).catch(function(){});
+  });
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    form.querySelector('button').disabled = true;
+    mp.fields.createCardToken({
+      cardholderName: document.getElementById('card-holder').value,
+      identificationType: 'CPF',
+      identificationNumber: document.getElementById('card-doc').value.replace(/\D/g, '')
+    }).then(function(token){
+      document.getElementById('card-token').value = token.id;
       if (!document.getElementById('card-payment-method').value) throw new Error('bandeira');
       form.submit();
     }).catch(function(){

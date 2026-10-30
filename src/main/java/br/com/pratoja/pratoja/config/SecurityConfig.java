@@ -31,11 +31,13 @@ public class SecurityConfig {
     }
 
     @Bean SecurityFilterChain security(HttpSecurity http, AuthenticationSuccessHandler successHandler) throws Exception {
-        http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+        http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                // Webhook do provedor de pagamento nao tem sessao/CSRF; protegido por assinatura HMAC propria.
+                .ignoringRequestMatchers("/webhooks/mercadopago"))
             .authorizeHttpRequests(auth -> auth
                 // Rotas privadas da loja devem preceder as rotas públicas de catálogo e carrinho
                 .requestMatchers("/loja/*/checkout", "/loja/*/pedidos/**", "/loja/*/api/orders/**").hasAnyRole("CUSTOMER", "STORE_ADMIN", "PLATFORM_ADMIN")
-                .requestMatchers("/", "/login", "/admin/login", "/cadastro", "/recuperar-senha", "/redefinir-senha", "/loja/**", "/cardapio", "/produto/**", "/monte-seu-prato", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error", "/carrinho", "/termos", "/privacidade", "/robots.txt", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/login", "/admin/login", "/cadastro", "/recuperar-senha", "/redefinir-senha", "/loja/**", "/cardapio", "/produto/**", "/monte-seu-prato", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error", "/carrinho", "/webhooks/mercadopago", "/termos", "/privacidade", "/robots.txt", "/favicon.ico").permitAll()
                 .requestMatchers("/platform/**").hasRole("PLATFORM_ADMIN") // Painel da plataforma (Fase 5)
                 .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("STORE_ADMIN", "PLATFORM_ADMIN")
                 .requestMatchers("/checkout", "/pedidos/**", "/historico", "/perfil/**", "/api/orders/**").hasAnyRole("CUSTOMER", "STORE_ADMIN", "PLATFORM_ADMIN")

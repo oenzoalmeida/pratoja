@@ -20,6 +20,7 @@ public record OrderView(
         LocalDateTime createdAt,
         String address,
         DomainTypes.PaymentMethod paymentMethod,
+        DomainTypes.PaymentStatus paymentStatus,
         BigDecimal changeFor,
         List<Item> items,
         List<Step> history,
@@ -34,6 +35,20 @@ public record OrderView(
 
     public String statusLabel() {
         return labelFor(status);
+    }
+
+    public boolean pixPending() {
+        return paymentMethod == DomainTypes.PaymentMethod.PIX && paymentStatus == DomainTypes.PaymentStatus.PENDING;
+    }
+
+    public String paymentStatusLabel() {
+        if (paymentStatus == null) return "-";
+        return switch (paymentStatus) {
+            case PENDING -> paymentMethod == DomainTypes.PaymentMethod.PIX ? "Aguardando pagamento Pix" : "Aguardando pagamento";
+            case CONFIRMED -> paymentMethod == DomainTypes.PaymentMethod.PIX ? "Pix confirmado" : "Pagamento confirmado";
+            case CASH_ON_DELIVERY -> "Pagamento na entrega";
+            case CANCELLED -> "Pagamento cancelado/estornado";
+        };
     }
 
     public String number() {

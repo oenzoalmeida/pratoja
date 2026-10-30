@@ -10,6 +10,7 @@
     <a href="/admin/opcoes" th:classappend="${active=='options'}?'active'"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Personalização</span></a>
     <a href="/admin/clientes" th:classappend="${active=='customers'}?'active'"><svg th:replace="~{fragments :: icon('users','')}"></svg><span>Clientes</span></a>
     <a href="/admin/relatorios" th:classappend="${active=='reports'}?'active'"><svg th:replace="~{fragments :: icon('chart','')}"></svg><span>Relatórios</span></a>
+    <a href="/admin/pagamentos" th:classappend="${active=='payments'}?'active'"><svg th:replace="~{fragments :: icon('wallet','')}"></svg><span>Pagamentos</span></a>
     <a href="/admin/configuracoes" th:classappend="${active=='settings'}?'active'"><svg th:replace="~{fragments :: icon('pencil','')}"></svg><span>Configurações da loja</span></a>
     <a th:href="@{/loja/{slug}(slug=${store.slug})}" target="_blank"><svg th:replace="~{fragments :: icon('eye','')}"></svg><span>Ver loja</span></a>
   </nav>

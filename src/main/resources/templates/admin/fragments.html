@@ -7,6 +7,7 @@
     <a href="/admin" th:classappend="${active=='dashboard'}?'active'"><svg th:replace="~{fragments :: icon('layout-dashboard','')}"></svg><span>Visão geral</span></a>
     <a href="/admin/pedidos" th:classappend="${active=='orders'}?'active'"><svg th:replace="~{fragments :: icon('clipboard-list','')}"></svg><span>Pedidos</span></a>
     <a href="/admin/produtos" th:classappend="${active=='products'}?'active'"><svg th:replace="~{fragments :: icon('package','')}"></svg><span>Cardápio</span></a>
+    <a href="/admin/opcoes" th:classappend="${active=='options'}?'active'"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Personalização</span></a>
     <a href="/admin/clientes" th:classappend="${active=='customers'}?'active'"><svg th:replace="~{fragments :: icon('users','')}"></svg><span>Clientes</span></a>
     <a href="/admin/relatorios" th:classappend="${active=='reports'}?'active'"><svg th:replace="~{fragments :: icon('chart','')}"></svg><span>Relatórios</span></a>
     <a href="/admin/configuracoes" th:classappend="${active=='settings'}?'active'"><svg th:replace="~{fragments :: icon('pencil','')}"></svg><span>Configurações da loja</span></a>

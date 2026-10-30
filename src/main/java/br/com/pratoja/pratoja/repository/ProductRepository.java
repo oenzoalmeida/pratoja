@@ -10,6 +10,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths={"category","store"}) List<Product> findByStore_IdAndArchivedFalseOrderByCategorySortOrderAscNameAsc(Long storeId);
     @EntityGraph(attributePaths={"category","store"}) List<Product> findByStore_IdAndFeaturedTrueAndAvailableTrueAndArchivedFalseOrderByIdDesc(Long storeId);
     Optional<Product> findFirstByStore_IdAndCustomizableTrueAndArchivedFalse(Long storeId);
+    List<Product> findByStore_IdAndCustomizableTrueAndArchivedFalseOrderByNameAsc(Long storeId);
     long countByStore_IdAndArchivedFalse(Long storeId);
     // cast(:q as string): o JDBC envia null sem tipo (bytea no Postgres) e lower(bytea) não existe;
     // o cast garante tipagem textual nos dois bancos (H2 e Postgres).

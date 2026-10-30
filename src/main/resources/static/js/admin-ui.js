@@ -30,3 +30,6 @@ document.querySelectorAll('.order-column').forEach(column=>{
   const empty=column.querySelector('.column-empty');
   if(empty)empty.hidden=Boolean(hasCards);
 });
+
+const activeAdminNav=document.querySelector('.admin-sidebar nav a.active');
+if(activeAdminNav)activeAdminNav.scrollIntoView({block:'nearest',inline:'center'});

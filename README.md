@@ -6,21 +6,19 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 ## Demonstração
 
-**Aplicação:** https://pratoja.oenzoalmeida.blitz.cloud
+**Aplicação:** https://18.220.70.13.sslip.io
 
-> A demo roda em um plano gratuito e pode demorar alguns segundos para acordar após períodos sem visitas. Se estiver indisponível no momento, os passos abaixo executam o projeto localmente em poucos minutos.
+> A demo fica no ar continuamente em um servidor na AWS (Lightsail). Se preferir, os passos abaixo executam o projeto localmente em poucos minutos.
 
 **Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123` (credencial pública de demonstração). Os dados podem ser alterados por outros visitantes. O acesso administrativo é provisionado internamente e não possui credencial pública.
 
 ## Telas
 
-| Tela inicial da loja | Cardápio |
+| Cardápio | Monte seu prato |
 | --- | --- |
-| ![Tela inicial da loja](docs/screenshots/inicio.png) | ![Cardápio da loja](docs/screenshots/cardapio.png) |
+| ![Cardápio da loja](docs/screenshots/cardapio.png) | ![Monte seu prato](docs/screenshots/monte-seu-prato.png) |
 
-Capturas da [demonstração pública](https://pratoja.oenzoalmeida.blitz.cloud).
-
-Nota: a demo pública roda um build anterior ao `main`; nessas capturas o título aparece como "Restaurante" (nome padrão da loja quando não configurada) e o selo "Made with blitz.cloud" é do host gratuito. No `main`, o título passa a ser "PratoJá — <nome da loja>" (via #23).
+Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a identidade visual atual (out/2026). As imagens dos pratos na demo foram geradas por IA para fins de demonstração; em uma loja real, cada restaurante envia as fotos dos próprios pratos pelo painel.
 
 ## Sobre o projeto
 
@@ -132,7 +130,7 @@ Rate limiting nas rotas de recuperação de senha (detalhes em [docs/email-e-rec
 
 ## Status
 
-Em produção em https://pratoja.oenzoalmeida.blitz.cloud (container Docker + PostgreSQL Supabase). Multitenancy nas fases 1–5 concluído: isolamento por loja no back-end, páginas públicas por slug e painel `/platform`.
+Em produção em https://18.220.70.13.sslip.io (container Docker + PostgreSQL em AWS Lightsail). Multitenancy nas fases 1–5 concluído: isolamento por loja no back-end, páginas públicas por slug e painel `/platform`.
 
 ## Limitações conhecidas
 

@@ -243,6 +243,7 @@ body{background:var(--cream)}
 
 /* Home: destaques com o mesmo tratamento de imagem do cardapio */
 .favorites{background:var(--cream)}
+.favorites .product-grid{grid-template-columns:repeat(2,1fr);gap:34px 26px}
 .favorites .product-action{background:var(--ink);color:var(--cream);border-radius:999px}
 .favorites .product-action:hover{background:var(--orange);color:#fff}
 .favorites .product-card{border:0;background:transparent;border-radius:0;overflow:visible}

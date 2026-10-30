@@ -12,6 +12,16 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 **Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123` (credencial pública de demonstração). Os dados podem ser alterados por outros visitantes. O acesso administrativo é provisionado internamente e não possui credencial pública.
 
+## Telas
+
+| Tela inicial da loja | Cardápio |
+| --- | --- |
+| ![Tela inicial da loja](docs/screenshots/inicio.png) | ![Cardápio da loja](docs/screenshots/cardapio.png) |
+
+Capturas da [demonstração pública](https://pratoja.oenzoalmeida.blitz.cloud).
+
+Nota: a demo pública roda um build anterior ao `main`; nessas capturas o título aparece como "Restaurante" (nome padrão da loja quando não configurada) e o selo "Made with blitz.cloud" é do host gratuito. No `main`, o título passa a ser "PratoJá — <nome da loja>" (via #23).
+
 ## Sobre o projeto
 
 O PratoJá implementa o fluxo de um pedido online: navegação no cardápio, montagem do prato com grupos de opções e adicionais, carrinho com taxa de entrega, checkout com entrega ou retirada, acompanhamento do status em tempo real, histórico, avaliação e repetição de pedido. Também inclui os painéis administrativos de loja e de plataforma.

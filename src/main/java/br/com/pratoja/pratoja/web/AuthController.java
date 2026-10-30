@@ -15,7 +15,7 @@ public class AuthController {
     private final AccountService accounts;private final br.com.pratoja.pratoja.service.PasswordRecoveryService recovery;
     private final RecoveryRateLimiter rateLimiter;private final ClientIpResolver ipResolver;
     @Value("${pratoja.demo-mode:true}")private boolean demo;@Value("${pratoja.demo-reset-email:cliente@pratoja.com.br}")private String demoResetEmail;@Value("${pratoja.mail.enabled:false}")private boolean mailEnabled;
-    @GetMapping("/login")String login(){return "auth/login";}@GetMapping("/admin/login")String adminLogin(){return "auth/admin-login";}@GetMapping("/cadastro")String register(){return "auth/register";}
+    @GetMapping("/login")String login(Model model){model.addAttribute("demo",demo);return "auth/login";}@GetMapping("/admin/login")String adminLogin(){return "auth/admin-login";}@GetMapping("/cadastro")String register(){return "auth/register";}
     @PostMapping("/cadastro")String register(@RequestParam String name,@RequestParam String email,@RequestParam String phone,@RequestParam String password,@RequestParam String confirmPassword,Model model){try{accounts.register(name,email,phone,password,confirmPassword);model.addAttribute("success","Cadastro realizado. Agora entre com sua conta.");return "auth/login";}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());model.addAttribute("name",name);model.addAttribute("email",email);model.addAttribute("phone",phone);return "auth/register";}}
     @GetMapping("/recuperar-senha")String forgot(){return "auth/forgot";}
     // Rate limit SEMPRE ativo (independe de pratoja.mail.enabled): conta TENTATIVAS por IP e por e-mail.

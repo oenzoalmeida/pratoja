@@ -197,7 +197,9 @@ body{background:var(--cream)}
 .site-header{background:var(--ink);color:var(--cream);border-bottom:0}
 .site-header .brand-mark{background:var(--butter);color:var(--ink)!important}
 .site-header .desktop-nav a:hover{color:var(--butter)}
-.site-header .cart-link strong{background:var(--butter);color:var(--ink)}
+.site-header .cart-link{background:var(--butter);color:var(--ink);border-color:transparent;box-shadow:none}
+.site-header .cart-link:hover{background:#c9922c;color:var(--ink)}
+.site-header .cart-link strong{background:var(--ink);color:var(--butter)}
 .site-header .btn-outline{border-color:var(--cream);color:var(--cream)}
 .site-header .btn-primary{background:var(--butter);color:var(--ink);box-shadow:none}
 .site-header .btn-primary:hover{background:#c9922c}
@@ -237,6 +239,21 @@ body{background:var(--cream)}
   .menu-page .product-footer>strong{font-size:17px}
   .menu-page .chips{gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
 }
+
+
+/* Home: destaques com o mesmo tratamento de imagem do cardapio */
+.favorites{background:var(--cream)}
+.favorites .product-action{background:var(--ink);color:var(--cream);border-radius:999px}
+.favorites .product-action:hover{background:var(--orange);color:#fff}
+.favorites .product-card{border:0;background:transparent;border-radius:0;overflow:visible}
+.favorites .product-card:hover{transform:none;box-shadow:none}
+.favorites .product-image{height:auto;aspect-ratio:4/3;border-radius:16px}
+.favorites .product-info{padding:14px 2px 4px}
+.favorites .product-info h3{font-weight:400;font-size:24px}
+.favorites .product-info p{height:auto;min-height:40px}
+.favorites .product-info>div{padding:2px 2px 0}
+.favorites .product-info strong{font-weight:400;font-size:20px}
+.favorites .circle-button{background:var(--ink)}
 
 /* fix: imagens sempre preenchem o quadro (bug da faixa branca) */
 .product-image,.detail-image{position:relative}

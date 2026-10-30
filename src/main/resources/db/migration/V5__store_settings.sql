@@ -43,7 +43,7 @@ INSERT INTO store_settings (
     'Monte o pedido em poucos passos, personalize seu prato e acompanhe a entrega até a sua porta.',
     'Entrega em 35–50 min',
     6.00,
-    '#1e4d38', '#123325',
+    '#ef5b2a', '#d94717',
     NULL,
     CURRENT_TIMESTAMP
 );

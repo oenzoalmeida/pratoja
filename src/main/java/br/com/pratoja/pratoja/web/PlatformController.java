@@ -58,7 +58,7 @@ public class PlatformController {
             if (deliveryFee == null || deliveryFee.signum() < 0) throw new IllegalArgumentException("A taxa de entrega deve ser maior ou igual a zero.");
             s.setDeliveryFee(deliveryFee);
             s.setSlogan(slogan == null || slogan.isBlank() ? null : slogan.strip());
-            s.setBrandPrimary("#ef5b2a"); s.setBrandPrimaryDark("#d94717");
+            s.setBrandPrimary("#1e4d38"); s.setBrandPrimaryDark("#123325");
             stores.save(s);
             redirect.addFlashAttribute("success", "Loja criada.");
             return "redirect:/platform/lojas/" + s.getId();

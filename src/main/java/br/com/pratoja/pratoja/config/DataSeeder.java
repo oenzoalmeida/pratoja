@@ -68,7 +68,7 @@ public class DataSeeder implements CommandLineRunner {
     private Store defaultStore() {
         Store s = new Store();
         s.setSlug("restaurante"); s.setName("Restaurante"); s.setSlogan("Seu cardápio digital");
-        s.setDeliveryFee(new BigDecimal("6.00")); s.setBrandPrimary("#ef5b2a"); s.setBrandPrimaryDark("#d94717");
+        s.setDeliveryFee(new BigDecimal("6.00")); s.setBrandPrimary("#1e4d38"); s.setBrandPrimaryDark("#123325");
         return stores.save(s);
     }
 

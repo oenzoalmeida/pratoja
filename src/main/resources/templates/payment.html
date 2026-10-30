@@ -1,0 +1,95 @@
+<!doctype html><html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão — ' : 'Pagamento Pix — '}+${store.name}">Pagamento</title><th:block th:replace="~{fragments :: storeHead}"></th:block><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/redesign.css"><style>.mp-secure-field{height:44px;border:1.5px solid #d9d9d9;border-radius:10px;padding:10px 12px;background:#fff;box-sizing:border-box}.mp-secure-field:focus-within{border-color:#ff7a1a}</style></head>
+<body><header th:replace="~{fragments :: header}"></header><main class="page-shell">
+<section class="tracking-head"><div><span class="eyebrow" th:text="'Pedido '+${order.number()}">Pedido</span><h1 th:text="${payment.method.name() == 'CARD' ? 'Pagamento com cartão' : 'Pagamento via Pix'}"></h1><p><svg th:replace="~{fragments :: icon('clock','')}"></svg><span th:text="${payment.method.name() == 'CARD' ? 'Os campos do cartão são protegidos pelo Mercado Pago.' : 'Escaneie o QR Code ou use o copia e cola para concluir.'}"></span></p></div></section>
+<div class="alert error" th:if="${error}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span th:text="${error}"></span></div>
+<div class="alert error" th:if="${testMode}"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span>Ambiente de testes do Mercado Pago: nenhuma cobrança real é feita.</span></div>
+<!-- Pix: QR dinamico + copia e cola -->
+<section class="panel" style="text-align:center" th:if="${payment.method.name() == 'PIX'}">
+  <div class="panel-heading" style="justify-content:center"><span class="heading-icon"><svg th:replace="~{fragments :: icon('qr-code','')}"></svg></span><div><small>Total</small><h2 th:text="${'R$ ' + #numbers.formatDecimal(order.total,1,2,'COMMA')}"></h2></div></div>
+  <img th:if="${payment.qrCodeBase64 != null}" th:src="'data:image/png;base64,'+${payment.qrCodeBase64}" alt="QR Code Pix" width="260" height="260" style="margin:12px auto;display:block;max-width:100%">
+  <p th:if="${payment.qrCode != null}" style="word-break:break-all;font-size:.85rem;background:#f6f6f6;padding:10px;border-radius:8px" th:text="${payment.qrCode}"></p>
+  <p th:if="${payment.qrCode == null}">QR Code ainda não disponível. Use o botão de verificação abaixo em instantes.</p>
+  <button class="btn btn-primary" type="button" th:if="${payment.qrCode != null}" data-copy><svg th:replace="~{fragments :: icon('copy','')}"></svg>Copiar código Pix</button>
+  <p><span class="live"><i></i><span data-payment-status>Aguardando pagamento…</span></span></p>
+  <form th:action="@{/loja/{slug}/pedidos/{id}/pagamento/verificar(slug=${store.slug},id=${order.id})}" method="post" style="margin-top:8px"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-ghost"><svg th:replace="~{fragments :: icon('refresh-cw','')}"></svg>Já paguei, verificar</button></form>
+</section>
+<!-- Cartao: formulario tokenizado no navegador via MercadoPago.js (dados do cartao nao passam pelo servidor) -->
+<section class="panel" th:if="${payment.method.name() == 'CARD'}">
+  <div class="panel-heading"><span class="heading-icon"><svg th:replace="~{fragments :: icon('credit-card','')}"></svg></span><div><small>Total</small><h2 th:text="${'R$ ' + #numbers.formatDecimal(order.total,1,2,'COMMA')}"></h2></div></div>
+  <p th:if="${mpPublicKey == null}" class="detail-row"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg><span>Pagamento com cartão indisponível para esta loja no momento. Fale com o restaurante.</span></p>
+  <form id="card-form" th:if="${mpPublicKey != null}" th:action="@{/loja/{slug}/pedidos/{id}/pagamento/cartao(slug=${store.slug},id=${order.id})}" method="post" style="display:grid;gap:10px;text-align:left">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <input type="hidden" name="token" id="card-token">
+    <input type="hidden" name="paymentMethodId" id="card-payment-method">
+    <input type="hidden" name="issuerId" id="card-issuer">
+    <label>Número do cartão<div id="mp-card-number" class="mp-secure-field"></div></label>
+    <label>Nome impresso no cartão<input id="card-holder" autocomplete="cc-name" required></label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label>Validade<div id="mp-expiration-date" class="mp-secure-field"></div></label>
+      <label>CVV<div id="mp-security-code" class="mp-secure-field"></div></label>
+    </div>
+    <label>CPF do titular<input id="card-doc" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" required></label>
+    <label>Parcelas<select id="card-installments" name="installments"><option value="1">1x sem juros</option></select></label>
+    <div class="alert error" id="card-error" hidden></div>
+    <button class="btn btn-primary btn-lg" type="submit"><svg th:replace="~{fragments :: icon('credit-card','')}"></svg>Pagar <span th:text="${'R$ ' + #numbers.formatDecimal(order.total,1,2,'COMMA')}"></span></button>
+    <p style="font-size:.8rem;color:#666;display:flex;gap:6px;align-items:center"><svg th:replace="~{fragments :: icon('shield-check','')}"></svg>Número, validade e CVV são digitados direto nos campos seguros do Mercado Pago e nunca passam pelo PratoJá.</p>
+  </form>
+</section>
+</main><nav th:replace="~{fragments :: mobileNav}"></nav>
+<script th:if="${payment.method.name() == 'CARD' and mpPublicKey != null}" src="https://sdk.mercadopago.com/js/v2"></script>
+<script th:if="${payment.method.name() == 'CARD' and mpPublicKey != null}" th:inline="javascript">
+(function(){
+  var publicKey = [[${mpPublicKey}]], orderId = [[${order.id}]];
+  var form = document.getElementById('card-form');
+  function fail(msg){ var el = document.getElementById('card-error'); el.hidden = false; el.textContent = msg; }
+  if (typeof MercadoPago === 'undefined') { fail('Não foi possível carregar o serviço de pagamento. Verifique sua conexão e recarregue.'); form.querySelector('button').disabled = true; return; }
+  var mp = new MercadoPago(publicKey, {locale: 'pt-BR', trackingDisabled: true});
+  var fieldStyle = {fontFamily: 'inherit', fontSize: '16px', color: '#1a1a1a', placeholderColor: '#9a9a9a'};
+  var cardNumberField = mp.fields.create('cardNumber', {placeholder: '0000 0000 0000 0000', style: fieldStyle}).mount('mp-card-number');
+  mp.fields.create('expirationDate', {placeholder: 'MM/AA', mode: 'short', style: fieldStyle}).mount('mp-expiration-date');
+  mp.fields.create('securityCode', {placeholder: 'CVV', style: fieldStyle}).mount('mp-security-code');
+  cardNumberField.on('binChange', function(ev){
+    if (!ev || !ev.bin) { document.getElementById('card-payment-method').value = ''; document.getElementById('card-issuer').value = ''; return; }
+    mp.getPaymentMethods({bin: ev.bin}).then(function(pm){
+      var r = pm.results && pm.results[0];
+      if (r) {
+        document.getElementById('card-payment-method').value = r.id;
+        if (r.issuer) document.getElementById('card-issuer').value = r.issuer.id;
+      }
+    }).catch(function(){});
+  });
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    form.querySelector('button').disabled = true;
+    mp.fields.createCardToken({
+      cardholderName: document.getElementById('card-holder').value,
+      identificationType: 'CPF',
+      identificationNumber: document.getElementById('card-doc').value.replace(/\D/g, '')
+    }).then(function(token){
+      document.getElementById('card-token').value = token.id;
+      if (!document.getElementById('card-payment-method').value) throw new Error('bandeira');
+      form.submit();
+    }).catch(function(){
+      form.querySelector('button').disabled = false;
+      fail('Não foi possível validar o cartão. Confira os dados e tente novamente.');
+    });
+  });
+})();
+</script>
+<script th:inline="javascript">
+(function(){
+  var orderId = [[${order.id}]], slug = [[${store.slug}]];
+  var btn = document.querySelector('[data-copy]');
+  if (btn) btn.addEventListener('click', function(){
+    navigator.clipboard.writeText([[${payment.qrCode}]]).then(function(){ btn.querySelector('span, svg') && (btn.lastChild.textContent = 'Copiado!'); });
+  });
+  setInterval(function(){
+    fetch('/loja/' + slug + '/pedidos/' + orderId + '/pagamento/status').then(function(r){ return r.json(); }).then(function(d){
+      var el = document.querySelector('[data-payment-status]');
+      if (d.status === 'CONFIRMED') { window.location.href = '/loja/' + slug + '/pedidos/' + orderId + '/acompanhar'; return; }
+      if (d.status === 'CANCELLED' && el) el.textContent = 'Pagamento cancelado ou estornado.';
+    }).catch(function(){});
+  }, 4000);
+})();
+</script>
+</body></html>

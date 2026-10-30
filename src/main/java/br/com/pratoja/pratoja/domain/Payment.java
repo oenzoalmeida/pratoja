@@ -14,4 +14,12 @@ public class Payment {
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 30) private DomainTypes.PaymentStatus status;
     @Column(name = "change_for", precision = 12, scale = 2) private BigDecimal changeFor;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now();
+    // Integracao Mercado Pago: referencia interna unica (external_reference) e estado externo do pagamento.
+    @Column(length = 64) private String reference;
+    @Column(name = "mp_payment_id", length = 40) private String mpPaymentId;
+    @Column(name = "mp_status", length = 30) private String mpStatus;
+    @Column(name = "qr_code", columnDefinition = "TEXT") private String qrCode;
+    @Column(name = "qr_code_base64", columnDefinition = "TEXT") private String qrCodeBase64;
+    @Column(name = "ticket_url", length = 500) private String ticketUrl;
+    @Column(name = "paid_at") private LocalDateTime paidAt;
 }

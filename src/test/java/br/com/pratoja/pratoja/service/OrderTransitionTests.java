@@ -1,6 +1,7 @@
 package br.com.pratoja.pratoja.service;
 
 import br.com.pratoja.pratoja.domain.*;
+import br.com.pratoja.pratoja.payments.StorePaymentService;
 import br.com.pratoja.pratoja.repository.*;
 import org.junit.jupiter.api.Test;
 import java.util.*;
@@ -21,7 +22,7 @@ class OrderTransitionTests {
                 for (OrderStatus to : OrderStatus.values()) {
                     OrderRepository orders = mock(OrderRepository.class);
                     RealtimeHub hub = mock(RealtimeHub.class);
-                    OrderService service = new OrderService(orders, null, null, null, null, null, null, null, hub);
+                    OrderService service = new OrderService(orders, null, null, null, null, null, null, null, hub, mock(StorePaymentService.class));
                     Store store = new Store(); store.setId(1L);
                     br.com.pratoja.pratoja.domain.Order order = new br.com.pratoja.pratoja.domain.Order();
                     order.setStatus(from); order.setFulfillmentType(type);

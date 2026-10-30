@@ -64,3 +64,6 @@ body{min-width:320px;-webkit-font-smoothing:antialiased}.brand-logo{width:38px;h
 /* Breadcrumb de navegação (página de produto) */
 .breadcrumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .breadcrumb strong{color:var(--ink)}
+
+/* O atributo hidden deve vencer regras de display de labels/campos (ex.: troco no checkout). */
+[hidden]{display:none!important}

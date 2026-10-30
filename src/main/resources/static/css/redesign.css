@@ -1,0 +1,193 @@
+/* ============================================================
+   PratoJá — Proposta visual v1 (overlay descartável, só local)
+   Objetivos: apetite (fotos maiores), confiança (R$ pt-BR,
+   taxas claras), facilidade (alvos maiores, menos atrito).
+   Mantém var(--orange): a marca da loja segue configurável.
+   ============================================================ */
+:root{
+  --cream:#fff7ef;
+  --ink:#1d2422;
+  --muted:#5f6e69;
+  --radius:20px;
+  --shadow:0 14px 34px rgba(29,36,34,.10);
+  --shadow-sm:0 6px 16px rgba(29,36,34,.08);
+}
+body{background:var(--cream)}
+
+/* ---------- Header ---------- */
+.site-header{height:72px;background:color-mix(in srgb,var(--cream) 88%,transparent)}
+.cart-link{align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;box-shadow:var(--shadow-sm)}
+.btn{border-radius:999px;transition:transform .18s,box-shadow .18s}
+.btn-primary{box-shadow:0 8px 20px var(--orange-a25)}
+.btn-lg{padding:15px 26px}
+
+/* ---------- Hero ---------- */
+.hero{min-height:0;padding:34px clamp(20px,6vw,96px) 56px;gap:5vw;
+  background:
+    radial-gradient(circle at 88% 12%,color-mix(in srgb,var(--orange) 20%,transparent) 0,transparent 42%),
+    radial-gradient(circle at 4% 96%,color-mix(in srgb,var(--lime) 65%,transparent) 0,transparent 46%)}
+.hero h1,.page-intro h1,.detail-panel h1{letter-spacing:-.03em}
+.hero-copy>p{font-size:18px}
+.proof-chip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:9px 15px;color:var(--green);box-shadow:var(--shadow-sm)}
+.proof-chip:first-child{color:color-mix(in srgb,var(--star) 80%,#000)}
+.hero-proof{gap:10px;flex-wrap:wrap}
+.plate{transform:rotate(0);border-radius:38% 62% 55% 45%/48% 42% 58% 52%;box-shadow:0 28px 60px rgba(30,80,62,.18),inset 0 0 0 16px #f8f3ea}
+.plate .hero-dish{border-radius:inherit}
+.float-card{border-radius:14px;box-shadow:var(--shadow)}
+.hero-dish{width:100%;height:100%;object-fit:cover}
+
+/* ---------- Seções ---------- */
+.section{padding:64px clamp(20px,6vw,96px)}
+.section-heading{margin-bottom:30px}
+
+/* Passos: fileiras compactas no lugar de cartões altos */
+.step-grid article{padding:20px;display:flex;align-items:center;gap:16px;text-align:left;border:0;box-shadow:var(--shadow-sm)}
+.step-grid article p{margin:0}
+.step-grid b{margin-left:auto;font-size:12px;opacity:.7}
+.step-grid h3{margin:0 0 2px;font-size:18px}
+.step-icon{flex:none}
+
+/* ---------- Cards de produto: foto em destaque ---------- */
+.product-card{border:0;border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.product-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.product-image{height:220px}
+.product-info{padding:16px 16px 6px}
+.product-info p{-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;height:auto;min-height:40px;margin:4px 0 10px}
+.product-footer{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}
+.product-footer strong{font-size:19px;letter-spacing:-.01em}
+.product-action{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--orange);color:#fff;
+  border:0;border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 14px var(--orange-a25)}
+.product-action:hover{background:var(--orange-dark)}
+.product-action .icon{width:16px;height:16px}
+
+/* ---------- Cardápio ---------- */
+.page-shell{padding:40px 20px 90px}
+.page-intro{margin-bottom:24px}
+.page-intro h1{font-size:clamp(30px,4.5vw,46px)}
+.menu-tools{gap:14px;margin-bottom:22px}
+.search{border-radius:999px;box-shadow:var(--shadow-sm);border:0;padding:2px 18px}
+.chips{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px;scrollbar-width:none;
+  position:sticky;top:76px;z-index:30;background:linear-gradient(var(--cream) 82%,transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;border-radius:999px;border:0;box-shadow:var(--shadow-sm);padding:9px 16px}
+.empty{margin:14px 0}
+
+/* ---------- Detalhe do produto ---------- */
+.detail-image{border-radius:26px;box-shadow:var(--shadow)}
+.detail-price{font-size:26px;letter-spacing:-.01em}
+.quantity button{border-radius:50%;border:0;box-shadow:var(--shadow-sm)}
+.purchase-cta{flex:1}
+
+/* ---------- Monte seu prato ---------- */
+.builder fieldset{border:0;box-shadow:var(--shadow-sm)}
+.builder-summary{border-radius:24px}
+
+/* ---------- Sacola ---------- */
+.cart-item{background:#fff;border-radius:18px;box-shadow:var(--shadow-sm);padding:14px;border:0}
+.cart-summary{background:#fff;border:0;border-radius:22px;box-shadow:var(--shadow)}
+.cart-thumb img{border-radius:12px}
+
+/* ---------- CTA final ---------- */
+.custom-cta{margin:30px clamp(20px,6vw,96px) 70px;border-radius:28px;padding:52px 7%}
+.cta-dish{border-radius:24px}
+
+/* ---------- Rodapé ---------- */
+.footer{flex-direction:column;align-items:flex-start;gap:8px;padding:36px clamp(20px,6vw,96px)}
+
+/* ---------- Mobile ---------- */
+@media(max-width:900px){
+  .site-header{height:62px;padding:0 16px}
+  .cart-link{padding:7px 12px}
+  .cart-link span{display:none}
+  .hero{grid-template-columns:1fr;padding:20px 16px 44px;text-align:center}
+  .hero-visual{order:-1;min-height:0}
+  .plate{width:min(66vw,290px)}
+  .float-card{display:none}
+  .hero h1{font-size:36px;margin:16px 0 12px}
+  .hero-copy>p{font-size:16px;margin-inline:auto}
+  .hero-actions{margin:22px 0 18px}
+  .hero-actions .btn{flex:1;padding:14px 10px;font-size:15px}
+  .hero-proof{justify-content:center}
+  .section{padding:44px 16px}
+  .section-heading h2,.custom-cta h2{font-size:27px}
+  .step-grid{grid-template-columns:1fr;gap:12px}
+  /* cardápio e favoritos: grade 2 colunas, foto grande */
+  .product-grid,.menu-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  .product-image{height:140px}
+  .product-info{padding:12px 12px 4px}
+  .product-info h3{font-size:15.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:39px}
+  .product-info p{display:none}
+  .product-info small{font-size:11px}
+  .product-footer{padding:2px 12px 12px}
+  .product-footer strong{font-size:16px}
+  .product-action{width:36px;height:36px;padding:0;font-size:0;gap:0}
+  .product-action .icon{width:17px;height:17px}
+  .page-shell{padding:26px 14px 84px}
+  .page-intro h1{font-size:29px}
+  .page-intro p{font-size:14px}
+  .chips{top:64px;margin:0 -14px;padding:0 14px 8px}
+  .detail-image{height:300px;border-radius:22px}
+  .detail-panel{padding:18px 0}
+  .detail-panel h1{font-size:30px;margin:10px 0 8px}
+  .purchase-row{display:flex;gap:10px;align-items:center}
+  .custom-cta{margin:16px 16px 56px;padding:36px 22px;flex-direction:column;gap:22px;text-align:center}
+  .cta-dish{width:100%;max-width:300px}
+  .footer{padding:28px 16px 100px}
+  .empty{padding:44px 16px}
+}
+
+/* ---------- Correção: conflito com o card horizontal do app.css (≤600px) ---------- */
+@media(max-width:600px){
+  .product-card{display:flex;flex-direction:column;grid-template-columns:none;grid-template-rows:none}
+  .product-main{display:block;flex:1}
+  .product-image{grid-row:auto;height:140px;min-height:0;aspect-ratio:auto}
+  .product-info{padding:12px 12px 4px}
+  .product-info h3{font-size:15.5px;min-height:39px}
+  .product-info p{display:none;min-height:0}
+  .product-footer{grid-column:auto;padding:2px 12px 12px}
+  .product-action{border-radius:50%;width:36px;height:36px;min-height:36px}
+}
+
+/* ---------- Passos: grade icon | textos | número ---------- */
+@media(max-width:900px){
+  .step-grid article{display:grid;grid-template-columns:44px minmax(0,1fr) auto;grid-template-rows:auto auto;
+    column-gap:14px;align-items:center;padding:16px 18px}
+  .step-grid .step-icon{grid-row:1/3;grid-column:1}
+  .step-grid h3{grid-column:2;grid-row:1;margin:0}
+  .step-grid p{grid-column:2;grid-row:2}
+  .step-grid b{grid-column:3;grid-row:1/3;margin:0}
+}
+
+/* ---------- Passos: flex com ordem explícita (v2) ---------- */
+@media(max-width:900px){
+  .step-grid article{display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:4px;padding:16px 18px;text-align:left}
+  .step-grid .step-icon{order:1;flex:none;grid-row:auto;grid-column:auto}
+  .step-grid h3{order:2;flex:1;margin:0;grid-column:auto;grid-row:auto}
+  .step-grid b{order:3;margin:0;grid-column:auto;grid-row:auto}
+  .step-grid p{order:4;flex-basis:100%;margin:2px 0 0 58px;grid-column:auto;grid-row:auto}
+}
+
+/* ---------- Badge da plataforma no rodapé ---------- */
+.platform-badge{display:inline-flex;align-items:center;gap:6px;vertical-align:-4px;color:#d7e3df}
+.platform-badge img{border-radius:5px;display:block}
+.platform-badge span{font-weight:700;color:#fff}
+.platform-badge:hover{color:#fff}
+
+/* ---------- Builder mobile: barra de resumo compacta (corrige painel esticado da main) ---------- */
+@media(max-width:600px){
+  .builder-summary{top:auto;height:auto;min-height:0;left:12px;right:12px;bottom:78px;
+    grid-template-rows:auto auto;align-content:center;row-gap:1px;padding:12px 16px;border-radius:18px}
+  .builder-summary>span{font-size:11px}
+  .builder-summary>strong{font-size:20px;margin:0}
+  .builder-summary p{display:none}
+  .builder-summary button{grid-row:1/3;grid-column:2;padding:12px 16px}
+  .builder-groups{padding-bottom:110px}
+}
+
+/* ---------- Passos: layout em grade flex ordenada (global) ---------- */
+.step-grid article{display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:4px;padding:20px;text-align:left;border:0;box-shadow:var(--shadow-sm)}
+.step-grid .step-icon{order:1;flex:none}
+.step-grid h3{order:2;flex:1;margin:0}
+.step-grid b{order:3;margin:0}
+.step-grid p{order:4;flex-basis:100%;margin:2px 0 0 58px}

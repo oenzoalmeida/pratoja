@@ -132,7 +132,8 @@ class PasswordRecoverySecurityTests {
             String html = result.getResponse().getContentAsString();
             String token = html.substring(html.indexOf(LINK_MARKER) + LINK_MARKER.length());
             token = token.substring(0, token.indexOf('"'));
-            String nova = "RotacaoSegura" + UUID.randomUUID().toString().substring(0, 6);
+            // Dígito fixo no prefixo: o sufixo aleatório (hex) pode não conter número, e a senha exige um.
+            String nova = "RotacaoSegura1" + UUID.randomUUID().toString().substring(0, 6);
             mvc.perform(post("/redefinir-senha").with(csrf())
                     .param("token", token).param("password", nova).param("confirmPassword", nova))
                 .andExpect(status().is3xxRedirection())

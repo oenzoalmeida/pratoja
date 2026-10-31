@@ -95,6 +95,22 @@ class ForcedPasswordChangeTests {
     }
 
     @Test
+    void forceChangePageOffersLogoutThatEndsSession() throws Exception {
+        seedCentral(true);
+        var principal = user(CENTRAL).roles("PLATFORM_ADMIN");
+
+        // A tela de troca obrigatória oferece saída por POST /logout com CSRF renderizado.
+        mvc.perform(get("/trocar-senha").with(principal))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("action=\"/logout\"")))
+                .andExpect(content().string(containsString("Sair e trocar de conta")));
+
+        // O logout passa pelo guard (excluído no registro) e encerra a sessão com a flag ativa.
+        mvc.perform(post("/logout").with(principal).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
     void deactivatedAccountIsCutOffAndSentToLogin() throws Exception {
         var u = seedCentral(false);
         u.setActive(false);

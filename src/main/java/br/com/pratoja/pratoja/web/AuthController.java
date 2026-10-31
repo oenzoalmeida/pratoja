@@ -17,6 +17,12 @@ public class AuthController {
     @Value("${pratoja.demo-mode:true}")private boolean demo;@Value("${pratoja.demo-reset-email:cliente@pratoja.com.br}")private String demoResetEmail;@Value("${pratoja.mail.enabled:false}")private boolean mailEnabled;
     @GetMapping("/login")String login(Model model){model.addAttribute("demo",demo);return "auth/login";}@GetMapping("/admin/login")String adminLogin(){return "auth/admin-login";}@GetMapping("/cadastro")String register(){return "auth/register";}
     @PostMapping("/cadastro")String register(@RequestParam String name,@RequestParam String email,@RequestParam String phone,@RequestParam String password,@RequestParam String confirmPassword,Model model){try{accounts.register(name,email,phone,password,confirmPassword);model.addAttribute("success","Cadastro realizado. Agora entre com sua conta.");return "auth/login";}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());model.addAttribute("name",name);model.addAttribute("email",email);model.addAttribute("phone",phone);return "auth/register";}}
+    @GetMapping("/trocar-senha")String forceChange(){return "auth/force-change";}
+    @PostMapping("/trocar-senha")String forceChange(@RequestParam String currentPassword,@RequestParam String password,@RequestParam String confirmPassword,Model model,HttpServletRequest request,org.springframework.security.core.Authentication auth){
+        try{accounts.changePasswordAuthenticated(auth.getName(),currentPassword,password,confirmPassword);}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());return "auth/force-change";}
+        var session=request.getSession(false);if(session!=null)session.invalidate();
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        return "redirect:/login?senhaDefinida";}
     @GetMapping("/recuperar-senha")String forgot(){return "auth/forgot";}
     // Rate limit SEMPRE ativo (independe de pratoja.mail.enabled): conta TENTATIVAS por IP e por e-mail.
     // Ao estourar, devolve a MESMA view/mensagem genérica de sucesso (200) sem processar/enfileirar nada —

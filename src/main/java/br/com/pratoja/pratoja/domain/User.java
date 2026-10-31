@@ -16,5 +16,6 @@ public class User {
     /** Loja do usuário (obrigatória para STORE_ADMIN; NULL para CUSTOMER/PLATFORM_ADMIN). */
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "store_id") private Store store;
     @Column(nullable = false) private boolean active = true;
+    @Column(name = "must_change_password", nullable = false) private boolean mustChangePassword = false;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now();
 }

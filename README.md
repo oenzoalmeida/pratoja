@@ -10,7 +10,9 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 > A demo fica no ar continuamente em um servidor na AWS (Lightsail). Se preferir, os passos abaixo executam o projeto localmente em poucos minutos.
 
-**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123` (credencial pública de demonstração). Os dados podem ser alterados por outros visitantes. O acesso administrativo é provisionado internamente e não possui credencial pública.
+**Acesso de avaliação:** a página de login da demo pública não exibe credenciais de demonstração (verificado em nov/2026). Para avaliar, crie sua conta pelo [cadastro](https://18.220.70.13.sslip.io/cadastro) (dados fictícios; nenhuma cobrança real). O acesso administrativo é provisionado internamente e não possui credencial pública.
+
+**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123`. Essa conta é semeada automaticamente apenas quando o modo demo está ligado (na **execução local** ele vem ligado por padrão, ver "Executando localmente"); a página de login exibe essas credenciais nesse modo. Na demo pública, prefira o cadastro de uma conta nova.
 
 ## Telas
 
@@ -137,6 +139,11 @@ Em produção em https://18.220.70.13.sslip.io (container Docker + PostgreSQL em
 Pagamento e confirmação são **simulados**. Nenhuma cobrança real é realizada.
 
 Recuperação de senha: por padrão não há envio de e-mail (em modo demonstração o link é exibido na tela). Com `PRATOJA_MAIL_ENABLED=true` o envio é real via SMTP.
+
+Proteção contra abuso nos endpoints públicos de autenticação (janela fixa em memória, por instância):
+- **Login** conta apenas **falhas** — por IP (`PRATOJA_LOGIN_RATE_LIMIT_MAX_FAILURES_PER_IP`, default 20/10min) e por e-mail (`..._MAX_FAILURES_PER_EMAIL`, default 8/30min). Sucesso zera os contadores, então usuários legítimos atrás de NAT não são bloqueados. Ao estourar, o redirect é `/login?limite`, sem oráculo sobre a conta.
+- **Cadastro** conta tentativas por IP (`PRATOJA_SIGNUP_RATE_LIMIT_MAX_ATTEMPTS_PER_IP`, default 50/h).
+- **Recuperação/redefinição de senha** mantêm os limites já existentes (por IP e por e-mail, resposta genérica anti-enumeração).
 
 Login/cadastro ainda não têm rate limiting (apenas as rotas de recuperação).
 

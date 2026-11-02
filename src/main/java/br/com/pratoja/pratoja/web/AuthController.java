@@ -1,4 +1,5 @@
 package br.com.pratoja.pratoja.web;
+import br.com.pratoja.pratoja.config.AuthRateLimiter;
 import br.com.pratoja.pratoja.config.ClientIpResolver;
 import br.com.pratoja.pratoja.config.RecoveryRateLimiter;
 import br.com.pratoja.pratoja.service.AccountService;
@@ -13,10 +14,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller @RequiredArgsConstructor @Slf4j
 public class AuthController {
     private final AccountService accounts;private final br.com.pratoja.pratoja.service.PasswordRecoveryService recovery;
-    private final RecoveryRateLimiter rateLimiter;private final ClientIpResolver ipResolver;
+    private final RecoveryRateLimiter rateLimiter;private final AuthRateLimiter authRateLimiter;private final ClientIpResolver ipResolver;
     @Value("${pratoja.demo-mode:true}")private boolean demo;@Value("${pratoja.demo-reset-email:cliente@pratoja.com.br}")private String demoResetEmail;@Value("${pratoja.mail.enabled:false}")private boolean mailEnabled;
     @GetMapping("/login")String login(Model model){model.addAttribute("demo",demo);return "auth/login";}@GetMapping("/admin/login")String adminLogin(){return "auth/admin-login";}@GetMapping("/cadastro")String register(){return "auth/register";}
-    @PostMapping("/cadastro")String register(@RequestParam String name,@RequestParam String email,@RequestParam String phone,@RequestParam String password,@RequestParam String confirmPassword,Model model){try{accounts.register(name,email,phone,password,confirmPassword);model.addAttribute("success","Cadastro realizado. Agora entre com sua conta.");return "auth/login";}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());model.addAttribute("name",name);model.addAttribute("email",email);model.addAttribute("phone",phone);return "auth/register";}}
+    // Rate limit por IP no cadastro (contém criação em massa de contas). Ao estourar, devolve a mesma
+    // view de cadastro com mensagem genérica — sem processar nada e sem oráculo sobre contas existentes.
+    @PostMapping("/cadastro")String register(@RequestParam String name,@RequestParam String email,@RequestParam String phone,@RequestParam String password,@RequestParam String confirmPassword,Model model,HttpServletRequest request){String ip=ipResolver.resolve(request);if(!authRateLimiter.tryAcquireSignupIp(ip)){log.warn("Rate limit de cadastro: tentativa descartada sem criar conta (ip={})",ip);model.addAttribute("error","Muitas tentativas de cadastro a partir desta conexão. Aguarde alguns minutos e tente novamente.");return "auth/register";}try{accounts.register(name,email,phone,password,confirmPassword);model.addAttribute("success","Cadastro realizado. Agora entre com sua conta.");return "auth/login";}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());model.addAttribute("name",name);model.addAttribute("email",email);model.addAttribute("phone",phone);return "auth/register";}}
     @GetMapping("/trocar-senha")String forceChange(){return "auth/force-change";}
     @PostMapping("/trocar-senha")String forceChange(@RequestParam String currentPassword,@RequestParam String password,@RequestParam String confirmPassword,Model model,HttpServletRequest request,org.springframework.security.core.Authentication auth){
         try{accounts.changePasswordAuthenticated(auth.getName(),currentPassword,password,confirmPassword);}catch(IllegalArgumentException e){model.addAttribute("error",e.getMessage());return "auth/force-change";}

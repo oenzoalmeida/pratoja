@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
@@ -30,8 +31,10 @@ public class SecurityConfig {
         };
     }
 
-    @Bean SecurityFilterChain security(HttpSecurity http, AuthenticationSuccessHandler successHandler) throws Exception {
-        http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+    @Bean SecurityFilterChain security(HttpSecurity http, AuthenticationSuccessHandler successHandler,
+                                       AuthRateLimiter authRateLimiter, ClientIpResolver ipResolver) throws Exception {
+        http.addFilterBefore(new LoginRateLimitFilter(authRateLimiter, ipResolver), UsernamePasswordAuthenticationFilter.class)
+            .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 // Webhook do provedor de pagamento nao tem sessao/CSRF; protegido por assinatura HMAC propria.
                 .ignoringRequestMatchers("/webhooks/mercadopago"))
             .authorizeHttpRequests(auth -> auth

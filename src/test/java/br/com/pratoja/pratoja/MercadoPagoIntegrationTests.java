@@ -49,7 +49,11 @@ class MercadoPagoIntegrationTests {
     private static final String CRYPTO_KEY = "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="; // 32 bytes "0123...901"
     private static final String STORE_TOKEN = "TEST-ACCESS-TOKEN-LOJA";
     private static final long SELLER_ID = 123456789L;
-    private static final AtomicLong paymentIds = new AtomicLong(50000);
+    // IDs únicos por execução: os testes rodam contra o datasource default (H2 em arquivo local,
+    // PostgreSQL no CI), e os eventos de webhook processados PERSISTEM no banco entre execuções
+    // (deduplicação via ProcessedWebhookEvent). IDs fixos faziam a 2ª execução local falhar.
+    private static final long RUN_BASE = System.currentTimeMillis();
+    private static final AtomicLong paymentIds = new AtomicLong(RUN_BASE);
     private static final Map<String, Map<String, Object>> stubPayments = new ConcurrentHashMap<>();
     private static final Map<String, String> lastAuthByPayment = new ConcurrentHashMap<>();
     private static HttpServer stub;
@@ -213,17 +217,17 @@ class MercadoPagoIntegrationTests {
 
         // Webhook aprovado: assinatura valida + re-consulta a API + confere valor/moeda/referencia
         stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
-        postWebhook(payment.getMpPaymentId(), 900001L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 1);
 
         payment = payments.findById(payment.getId()).orElseThrow();
         assertEquals(DomainTypes.PaymentStatus.CONFIRMED, payment.getStatus());
         assertNotNull(payment.getPaidAt());
         Order order = orders.findById(orderId).orElseThrow();
         assertEquals(DomainTypes.OrderStatus.CONFIRMED, order.getStatus());
-        assertTrue(webhookEvents.existsByProviderAndEventKey("mercadopago", "900001"));
+        assertTrue(webhookEvents.existsByProviderAndEventKey("mercadopago", String.valueOf(RUN_BASE + 1)));
 
         // Reenvio do MESMO evento (idempotencia): segue confirmado, sem efeito adicional
-        postWebhook(payment.getMpPaymentId(), 900001L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 1);
         payment = payments.findById(payment.getId()).orElseThrow();
         assertEquals(DomainTypes.PaymentStatus.CONFIRMED, payment.getStatus());
         assertEquals(DomainTypes.OrderStatus.CONFIRMED, orders.findById(orderId).orElseThrow().getStatus());
@@ -248,7 +252,7 @@ class MercadoPagoIntegrationTests {
         // Stub passa a relatar valor DIFERENTE do pedido: nao pode confirmar
         stubPayments.get(payment.getMpPaymentId()).put("amount", new BigDecimal("0.01"));
         stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
-        postWebhook(payment.getMpPaymentId(), 900002L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 2);
         payment = payments.findById(payment.getId()).orElseThrow();
         assertEquals(DomainTypes.PaymentStatus.PENDING, payment.getStatus());
         assertEquals(DomainTypes.OrderStatus.RECEIVED, orders.findById(orderId).orElseThrow().getStatus());
@@ -263,11 +267,11 @@ class MercadoPagoIntegrationTests {
                 .andExpect(status().isOk());
         Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
         stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
-        postWebhook(payment.getMpPaymentId(), 900003L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 3);
         assertEquals(DomainTypes.OrderStatus.CONFIRMED, orders.findById(orderId).orElseThrow().getStatus());
         // Evento NOVO (id diferente) com estorno: cancela pagamento e pedido
         stubPayments.get(payment.getMpPaymentId()).put("status", "refunded");
-        postWebhook(payment.getMpPaymentId(), 900004L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 4);
         payment = payments.findById(payment.getId()).orElseThrow();
         assertEquals(DomainTypes.PaymentStatus.CANCELLED, payment.getStatus());
         assertEquals(DomainTypes.OrderStatus.CANCELLED, orders.findById(orderId).orElseThrow().getStatus());
@@ -385,7 +389,7 @@ class MercadoPagoIntegrationTests {
         // A API passa a relatar o pagamento em OUTRA conta (collector divergente): nao pode confirmar
         stubPayments.get(payment.getMpPaymentId()).put("collector", 999999L);
         stubPayments.get(payment.getMpPaymentId()).put("status", "approved");
-        postWebhook(payment.getMpPaymentId(), 900010L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 10);
         assertEquals(DomainTypes.PaymentStatus.PENDING, payments.findById(payment.getId()).orElseThrow().getStatus());
         assertEquals(DomainTypes.OrderStatus.RECEIVED, orders.findById(orderId).orElseThrow().getStatus());
     }
@@ -399,7 +403,7 @@ class MercadoPagoIntegrationTests {
                 .andExpect(status().isOk());
         Payment payment = payments.findAll().stream().filter(p -> p.getOrder().getId().equals(orderId)).findFirst().orElseThrow();
         stubPayments.get(payment.getMpPaymentId()).put("status", "expired");
-        postWebhook(payment.getMpPaymentId(), 900011L);
+        postWebhook(payment.getMpPaymentId(), RUN_BASE + 11);
         assertEquals(DomainTypes.PaymentStatus.CANCELLED, payments.findById(payment.getId()).orElseThrow().getStatus());
         assertEquals(DomainTypes.OrderStatus.CANCELLED, orders.findById(orderId).orElseThrow().getStatus());
     }

@@ -22,8 +22,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClientIpResolver {
 
+    /**
+     * Quantos proxies confiáveis separam a aplicação do cliente (default 1 — ex.: proxy reverso
+     * na frente do container). Com 0, o X-Forwarded-For é IGNORADO (identidade = remoteAddr,
+     * não-spoofável): use 0 quando NÃO houver proxy, senão um cliente pode forjar o header e
+     * criar buckets de rate limit ilimitados. Deve corresponder à topologia real do deploy.
+     */
+    @org.springframework.beans.factory.annotation.Value("${pratoja.security.trusted-proxy-hops:1}")
+    private int trustedProxyHops;
+
     public String resolve(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
+        String forwarded = trustedProxyHops > 0 ? request.getHeader("X-Forwarded-For") : null;
         if (forwarded != null && !forwarded.isBlank()) {
             int lastComma = forwarded.lastIndexOf(',');
             String rightmost = (lastComma >= 0 ? forwarded.substring(lastComma + 1) : forwarded).trim();

@@ -17,7 +17,8 @@ RUN apt-get update \
 # Usuário sem privilégios (menor privilégio). O diretório ./data guarda o upload
 # de imagens de produtos e, no modo H2, o banco em arquivo; precisa ser gravável
 # e é montado como volume persistente em produção.
-RUN groupadd --system app && useradd --system --gid app --home-dir /app app \
+# UID/GID fixos (10001) para o chown pré-deploy do volume — ver docs/deploy-imagem-nao-root.md.
+RUN groupadd --system --gid 10001 app && useradd --system --uid 10001 --gid app --home-dir /app app \
     && mkdir -p /app/data \
     && chown -R app:app /app
 USER app

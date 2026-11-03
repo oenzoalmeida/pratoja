@@ -7,6 +7,9 @@ name: Build image (GHCR)
 on:
   push:
     branches: [main]
+  # Em PRs a imagem é construída SEM push: verifica Dockerfile antes do merge.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -26,13 +30,14 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/pratoja:cloudrun
             ghcr.io/${{ github.repository_owner }}/pratoja:latest
 
   redeploy-blitz:
     needs: build
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Redeploy on Blitz.cloud (if key present)

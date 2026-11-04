@@ -18,6 +18,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import br.com.pratoja.pratoja.repository.StoreRepository;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.mock.web.MockHttpSession;
 
 import java.util.UUID;
@@ -63,6 +64,19 @@ class PratojaFlowTests {
     void unknownEndpointsAreDeniedByDefault() throws Exception {
         mvc.perform(get("/api/rota-nao-cadastrada"))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @Transactional
+    void landingExplainsWhenNoRestaurantsAreAvailable() throws Exception {
+        var allStores = stores.findAll();
+        allStores.forEach(s -> s.setActive(false));
+        stores.saveAllAndFlush(allStores);
+
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Nenhuma loja disponível no momento")))
+                .andExpect(content().string(containsString("Volte mais tarde")));
     }
 
     @Test

@@ -235,7 +235,9 @@ class PratojaFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Pedido recebido")))
                 .andExpect(content().string(containsString("Saiu para entrega")))
-                .andExpect(content().string(containsString("Aguardando")));
+                .andExpect(content().string(containsString("Aguardando")))
+                // Regressão auditoria 2026-11-03: acompanhamento também precisa do app.js para o contador da sacola
+                .andExpect(content().string(containsString("/js/app.js")));
 
         mvc.perform(post("/admin/pedidos/" + order.getId() + "/status")
                         .with(user("admin@pratoja.com.br").roles("STORE_ADMIN")).with(csrf())
@@ -290,7 +292,9 @@ class PratojaFlowTests {
         mvc.perform(get("/loja/restaurante/checkout").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Finalize seu pedido")))
-                .andExpect(content().string(containsString("Subtotal")));
+                .andExpect(content().string(containsString("Subtotal")))
+                // Regressão auditoria 2026-11-03: sem app.js o contador da sacola no header fica 0 mesmo com itens
+                .andExpect(content().string(containsString("/js/app.js")));
     }
 
 

@@ -23,6 +23,12 @@
   <h1>Escolha uma loja</h1>
   <p style="margin-bottom:24px">Este PratoJá atende mais de um restaurante. Selecione uma loja para ver o cardápio e montar seu pedido.</p>
   <div class="product-grid" style="grid-template-columns:1fr">
+    <section class="product-card" th:if="${#lists.isEmpty(stores)}" role="status" aria-live="polite">
+      <div class="product-info">
+        <h2>Nenhuma loja disponível no momento</h2>
+        <p>Não há restaurantes recebendo pedidos por aqui agora. Volte mais tarde para conferir os cardápios.</p>
+      </div>
+    </section>
     <article class="product-card" th:each="s:${stores}">
       <a class="product-main" th:href="@{/loja/{slug}(slug=${s.slug})}">
         <div class="product-info"><h2 th:text="${s.name}">Loja</h2><p th:text="${s.slogan}">Cardápio digital</p></div>

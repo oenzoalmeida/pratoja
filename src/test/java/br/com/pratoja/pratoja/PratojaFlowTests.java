@@ -18,6 +18,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import br.com.pratoja.pratoja.repository.StoreRepository;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.mock.web.MockHttpSession;
 
 import java.util.UUID;
@@ -63,6 +64,19 @@ class PratojaFlowTests {
     void unknownEndpointsAreDeniedByDefault() throws Exception {
         mvc.perform(get("/api/rota-nao-cadastrada"))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @Transactional
+    void landingExplainsWhenNoRestaurantsAreAvailable() throws Exception {
+        var allStores = stores.findAll();
+        allStores.forEach(s -> s.setActive(false));
+        stores.saveAllAndFlush(allStores);
+
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Nenhuma loja disponível no momento")))
+                .andExpect(content().string(containsString("Volte mais tarde")));
     }
 
     @Test
@@ -235,7 +249,9 @@ class PratojaFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Pedido recebido")))
                 .andExpect(content().string(containsString("Saiu para entrega")))
-                .andExpect(content().string(containsString("Aguardando")));
+                .andExpect(content().string(containsString("Aguardando")))
+                // Regressão auditoria 2026-11-03: acompanhamento também precisa do app.js para o contador da sacola
+                .andExpect(content().string(containsString("/js/app.js")));
 
         mvc.perform(post("/admin/pedidos/" + order.getId() + "/status")
                         .with(user("admin@pratoja.com.br").roles("STORE_ADMIN")).with(csrf())
@@ -290,7 +306,9 @@ class PratojaFlowTests {
         mvc.perform(get("/loja/restaurante/checkout").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Finalize seu pedido")))
-                .andExpect(content().string(containsString("Subtotal")));
+                .andExpect(content().string(containsString("Subtotal")))
+                // Regressão auditoria 2026-11-03: sem app.js o contador da sacola no header fica 0 mesmo com itens
+                .andExpect(content().string(containsString("/js/app.js")));
     }
 
 

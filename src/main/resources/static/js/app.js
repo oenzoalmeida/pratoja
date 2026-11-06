@@ -1,6 +1,6 @@
 const money = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const csrfToken=form=>form?.querySelector('input[name="_csrf"]')?.value||decodeURIComponent(document.cookie.split('; ').find(c=>c.startsWith('XSRF-TOKEN='))?.split('=')[1]||'');
-function toast(message,error=false){const el=document.createElement('div');el.className='toast'+(error?' error':'');el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),2800)}
+function toast(message,error=false){const el=document.createElement('div');el.className='toast'+(error?' error':'');el.setAttribute('role',error?'alert':'status');el.setAttribute('aria-live',error?'assertive':'polite');el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),2800)}
 const cartBase=()=>document.querySelector('[data-cart-base]')?.dataset.cartBase||'/api/cart';
 async function cartCount(){try{const r=await fetch(cartBase());if(!r.ok)return;const c=await r.json();document.querySelectorAll('[data-cart-count]').forEach(e=>e.textContent=c.count)}catch{}}
 document.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>{const i=b.parentElement.querySelector('input');i.value=Math.max(1,+i.value-1)});

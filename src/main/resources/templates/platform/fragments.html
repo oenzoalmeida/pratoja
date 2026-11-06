@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <body>
-<aside th:fragment="sidebar(active)" class="admin-sidebar">
+<aside th:fragment="sidebar(active)" class="admin-sidebar"><a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
   <a class="brand brand-light" href="/platform"><span class="brand-mark">P</span><span>PratoJá · Plataforma</span></a>
   <nav aria-label="Navegação da plataforma">
     <a href="/platform" th:classappend="${active=='stores'}?'active'"><svg th:replace="~{fragments :: icon('store','')}"></svg><span>Lojas</span></a>

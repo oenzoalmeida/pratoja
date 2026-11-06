@@ -7,7 +7,7 @@
 :root{
   --cream:#f4f0e6;
   --ink:#1a241e;
-  --muted:#66716a;
+  --muted:#5d6860;
   --radius:20px;
   --shadow:0 14px 34px rgba(29,36,34,.10);
   --shadow-sm:0 6px 16px rgba(29,36,34,.08);
@@ -193,7 +193,7 @@ body{background:var(--cream)}
 .step-grid p{order:4;flex-basis:100%;margin:2px 0 0 58px}
 
 /* ===== Identidade v3 - direcao botanica editorial (proposta 2) ===== */
-:root{--star:#e0a83c;--butter:#e0a83c}
+:root{--star:#b57700;--butter:#e0a83c}
 .site-header{background:var(--ink);color:var(--cream);border-bottom:0}
 .site-header .brand-mark{background:var(--butter);color:var(--ink)!important}
 .site-header .desktop-nav a:hover{color:var(--butter)}

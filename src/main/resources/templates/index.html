@@ -3,7 +3,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="canonical" th:href="${siteBaseUrl + '/loja/' + store.slug}"><meta name="description" th:content="${store.description}" content=""><title th:text="'PratoJá — '+${store.name}">PratoJá</title><th:block th:replace="~{fragments :: storeHead}"></th:block><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/redesign.css"><script defer src="/js/app.js"></script></head>
 <body>
 <header th:replace="~{fragments :: header}"></header>
-<main>
+<main id="conteudo">
   <div class="alert error" th:if="${param['acesso-negado'] != null}" style="max-width:1080px;margin:18px auto 0" role="alert"><svg th:replace="~{fragments :: icon('circle-alert','')}"></svg>Área restrita à equipe do restaurante. Faça login com um perfil ADMIN para acessar o painel.</div>
   <section class="hero">
     <div class="hero-copy"><span class="eyebrow">Sabor que chega rápido</span><h1 th:text="${store.heroTitle}">Seu cardápio</h1><p th:text="${store.heroSubtitle}">Peça em poucos passos.</p>

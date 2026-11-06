@@ -67,3 +67,36 @@ body{min-width:320px;-webkit-font-smoothing:antialiased}.brand-logo{width:38px;h
 
 /* O atributo hidden deve vencer regras de display de labels/campos (ex.: troco no checkout). */
 [hidden]{display:none!important}
+
+/* ---------- polimento de interface e movimento ----------
+   Referência de design: princípios de "fluid interfaces" das palestras de design da
+   Apple na WWDC — resposta imediata ao toque, animações curtas e com propósito,
+   tipografia com ajuste ótico. Só transform/opacity; tudo respeita
+   prefers-reduced-motion. Nenhuma biblioteca nova, nenhuma funcionalidade alterada. */
+:root{--ease-out:cubic-bezier(.22,.61,.36,1)}
+
+/* Resposta imediata: o feedback acontece no pointer-down, não no release. */
+.btn:active,.product-action:active,.chips a:active,.quantity button:active,.circle-button:active,.cart-link:active,.avatar-link:active{transform:scale(.97);transition-duration:.06s}
+.mobile-nav a:active{opacity:.7;transition-duration:.06s}
+.product-card{transition-timing-function:var(--ease-out)}
+.product-card:not(.unavailable):active{transform:scale(.99);transition-duration:.06s}
+
+/* Foco visível consistente para quem navega por teclado. */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+/* Tipografia: ajuste ótico automático e números tabulares em preços e métricas. */
+body{font-optical-sizing:auto}
+.product-footer strong,.detail-price,.table-price,.cart-summary,.builder-summary,.metric{font-variant-numeric:tabular-nums}
+
+/* Entradas curtas e com propósito, só no carregamento da página. */
+@keyframes pj-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.product-card,.cart-item,.history-card,.metric,.step-grid article{animation:pj-rise .4s var(--ease-out) both}
+.product-card:nth-child(2),.cart-item:nth-child(2),.history-card:nth-child(2),.metric:nth-child(2),.step-grid article:nth-child(2){animation-delay:.05s}
+.product-card:nth-child(3),.cart-item:nth-child(3),.history-card:nth-child(3),.metric:nth-child(3),.step-grid article:nth-child(3){animation-delay:.1s}
+.product-card:nth-child(4),.cart-item:nth-child(4),.history-card:nth-child(4),.metric:nth-child(4),.step-grid article:nth-child(4){animation-delay:.15s}
+.product-card:nth-child(n+5),.cart-item:nth-child(n+5),.history-card:nth-child(n+5),.metric:nth-child(n+5),.step-grid article:nth-child(n+5){animation-delay:.2s}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

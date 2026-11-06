@@ -30,7 +30,7 @@
 <!-- Cores configuráveis da loja: sobrescrevem as variáveis de :root do app.css quando preenchidas. -->
 <th:block th:fragment="brandStyle" th:if="${store.brandPrimary != null and !store.brandPrimary.isBlank()}"><style th:inline="text" th:if="${store.brandPrimaryDark != null and !store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];--orange-dark:[[${store.brandPrimaryDark}]];}</style><style th:inline="text" th:if="${store.brandPrimaryDark == null or store.brandPrimaryDark.isBlank()}">:root{--orange:[[${store.brandPrimary}]];}</style></th:block>
 
-<header th:fragment="header" class="site-header"><a class="skip-link" href="#conteudo">Ir para o conteúdo</a> th:data-cart-base="@{/loja/{slug}/api/cart(slug=${store.slug})}">
+<header th:fragment="header" class="site-header" th:data-cart-base="@{/loja/{slug}/api/cart(slug=${store.slug})}"><a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
   <th:block th:replace="~{fragments :: brandStyle}"></th:block>
   <a class="brand" th:href="@{/loja/{slug}(slug=${store.slug})}" th:aria-label="|${store.name} — início|"><img th:if="${store.logoPath != null and !store.logoPath.isBlank()}" class="brand-logo" th:src="${store.logoPath}" th:alt="${store.name}"><span class="brand-mark" th:if="${store.logoPath == null or store.logoPath.isBlank()}" th:text="${#strings.toUpperCase(#strings.substring(store.name,0,1))}">R</span><span th:text="${store.name}">Restaurante</span></a>
   <nav class="desktop-nav" aria-label="Navegação principal">

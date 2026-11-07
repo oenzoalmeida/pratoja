@@ -29,7 +29,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+// Limite de checkout folgado: os fluxos fazem pedidos com a mesma conta no mesmo contexto;
+// o comportamento do limiter é coberto em OrderRateLimiterTests.
+@SpringBootTest(properties = {"pratoja.checkout.rate-limit.max-attempts=1000"})
 @AutoConfigureMockMvc
 class PratojaFlowTests {
     @Autowired MockMvc mvc;

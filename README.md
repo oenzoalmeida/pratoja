@@ -20,7 +20,7 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 | --- | --- |
 | ![Cardápio da loja](docs/screenshots/cardapio.png) | ![Monte seu prato](docs/screenshots/monte-seu-prato.png) |
 
-Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a identidade visual atual (out/2026). As imagens dos pratos na demo foram geradas por IA para fins de demonstração; em uma loja real, cada restaurante envia as fotos dos próprios pratos pelo painel.
+Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a identidade visual atual (nov/2026). As imagens dos pratos na demo foram geradas por IA para fins de demonstração; em uma loja real, cada restaurante envia as fotos dos próprios pratos pelo painel.
 
 ## Sobre o projeto
 

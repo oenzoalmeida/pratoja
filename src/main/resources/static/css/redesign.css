@@ -364,3 +364,37 @@ body{background:var(--cream)}
   .builder-summary{padding:12px 16px}
   .builder-summary>strong{font-size:22px}
 }
+
+/* ============================================================
+   Segunda passada (nov/2026, aprovada em proposta de imagem):
+   hero em cartão escuro recuado com brilho dourado sutil,
+   eyebrows dourados nas seções e motion único nos cartões.
+   Sistema recombinado a partir de referências (tokens de
+   sweetgreen.com: verde profundo, sombras esverdeadas, motion
+   .24s; fogodechao.com: dourado champanhe #c6aa76) aplicados
+   sobre a identidade verde+dourado do PratoJá. Sem clone de
+   layout e sem dados novos.
+   ============================================================ */
+:root{
+  --green-950:#0e150e;
+  --gold-soft:#c6aa76;
+  --motion:.24s ease-in-out;
+}
+
+/* Hero: cartão escuro recuado com brilho dourado no canto */
+.hero{border-radius:28px;margin:18px 12px 0;position:relative}
+.hero::after{content:"";position:absolute;right:-120px;top:-120px;width:380px;height:380px;
+  border-radius:50%;background:radial-gradient(circle,rgba(198,170,118,.22),transparent 70%);
+  pointer-events:none}
+
+/* Eyebrows das seções em dourado champanhe */
+.section-heading .eyebrow{color:var(--gold-soft);letter-spacing:.14em}
+
+/* Cartões: motion único, lift e sombra esverdeada no hover */
+.step-grid article,.product-card{transition:transform var(--motion),box-shadow var(--motion)}
+.step-grid article:hover{transform:translateY(-4px);box-shadow:0 18px 50px rgba(14,21,14,.18)}
+.product-card:hover{box-shadow:0 18px 50px rgba(14,21,14,.18)}
+
+@media (max-width:720px){
+  .hero{border-radius:22px;margin:10px 8px 0}
+}

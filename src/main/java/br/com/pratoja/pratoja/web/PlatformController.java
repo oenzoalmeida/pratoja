@@ -102,6 +102,10 @@ public class PlatformController {
             applySlug(s, slug, name.equals(s.getName()) ? null : name);
             if (name == null || name.strip().length() < 2) throw new IllegalArgumentException("Informe o nome da loja (mínimo de 2 caracteres).");
             if (deliveryFee == null || deliveryFee.signum() < 0) throw new IllegalArgumentException("A taxa de entrega deve ser maior ou igual a zero.");
+            // As cores da marca são embutidas num bloco <style> das páginas públicas da loja:
+            // sem a validação de formato, um valor fora de #RRGGBB poderia quebrar o CSS ou injetar
+            // conteúdo no template (mesma regra já aplicada em /admin/configuracoes).
+            if (!isHexOrNull(brandPrimary) || !isHexOrNull(brandPrimaryDark)) throw new IllegalArgumentException("As cores devem estar no formato hexadecimal #RRGGBB (ex.: #1e4d38).");
             s.setName(name.strip()); s.setDeliveryFee(deliveryFee);
             s.setSlogan(bl(slogan)); s.setDescription(bl(description)); s.setPhone(bl(phone)); s.setWhatsapp(bl(whatsapp)); s.setEmail(bl(email));
             s.setAddressStreet(bl(addressStreet)); s.setAddressNumber(bl(addressNumber)); s.setAddressComplement(bl(addressComplement));
@@ -165,4 +169,6 @@ public class PlatformController {
     }
 
     private static String bl(String v) { if (v == null) return null; String x = v.strip(); return x.isEmpty() ? null : x; }
+
+    private static boolean isHexOrNull(String v) { if (v == null || v.strip().isEmpty()) return true; return v.strip().matches("^#[0-9a-fA-F]{6}$"); }
 }

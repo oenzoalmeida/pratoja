@@ -26,6 +26,7 @@ public class StorePaymentController {
     private final OrderService orderService;
     private final OrderPaymentService orderPayments;
     private final StorePaymentService storePayments;
+    private final br.com.pratoja.pratoja.config.OrderRateLimiter orderRateLimiter;
 
     private Store store(String slug) { return storeService.activeBySlug(slug); }
 
@@ -75,6 +76,10 @@ public class StorePaymentController {
         if (payment == null || payment.getMethod() != DomainTypes.PaymentMethod.CARD
                 || payment.getStatus() != DomainTypes.PaymentStatus.PENDING)
             return "redirect:/loja/" + slug + "/pedidos/" + id + "/acompanhar";
+        if (!orderRateLimiter.tryAcquireCard(auth.getName())) {
+            redirect.addFlashAttribute("error", "Muitas tentativas de pagamento em sequência. Aguarde alguns minutos e tente novamente.");
+            return "redirect:/loja/" + slug + "/pedidos/" + id + "/pagamento";
+        }
         try {
             OrderPaymentService.SyncResult result = orderPayments.chargeCard(id, token, paymentMethodId, issuerId, installments);
             if (result == OrderPaymentService.SyncResult.CONFIRMED)
@@ -94,6 +99,10 @@ public class StorePaymentController {
         Payment payment = orderService.paymentInStore(id, auth, store(slug));
         if (payment != null && payment.getMpPaymentId() != null
                 && payment.getStatus() == DomainTypes.PaymentStatus.PENDING) {
+            if (!orderRateLimiter.tryAcquireVerify(auth.getName())) {
+                redirect.addFlashAttribute("error", "Muitas verificações em sequência. Aguarde alguns minutos e tente novamente.");
+                return "redirect:/loja/" + slug + "/pedidos/" + id + "/pagamento";
+            }
             try {
                 OrderPaymentService.SyncResult result = orderPayments.syncFromProvider(payment);
                 if (result == OrderPaymentService.SyncResult.MISMATCH)

@@ -40,10 +40,16 @@ public class StoreService {
     @Transactional(readOnly = true)
     public long countActive() { return activeStores().size(); }
 
-    /** Loja do admin logado; PLATFORM_ADMIN não tem loja própria (SecurityException -> 404). */
+    /** Loja do admin logado; PLATFORM_ADMIN não tem loja própria: com exatamente 1 loja ativa
+     *  opera essa loja no /admin (fallback de loja única, mesmo critério das rotas antigas);
+     *  com 0 ou 2+ lojas ativas mantém o SecurityException -> 404 de antes. */
     @Transactional(readOnly = true)
     public Store adminStore(User admin) {
-        if (admin.getRole() == DomainTypes.Role.PLATFORM_ADMIN) throw new SecurityException();
+        if (admin.getRole() == DomainTypes.Role.PLATFORM_ADMIN) {
+            Store single = stores.findFirstByActiveTrueOrderByIdAsc().orElseThrow(SecurityException::new);
+            if (countActive() != 1) throw new SecurityException();
+            return single;
+        }
         if (admin.getRole() != DomainTypes.Role.STORE_ADMIN || admin.getStore() == null) throw new SecurityException();
         // Recarrega para evitar proxy lazy fora da sessão (open-in-view=false)
         return stores.findById(admin.getStore().getId()).orElseThrow(SecurityException::new);

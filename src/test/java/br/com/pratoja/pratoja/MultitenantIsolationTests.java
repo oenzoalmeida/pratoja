@@ -368,6 +368,31 @@ class MultitenantIsolationTests {
         mvc.perform(get("/admin/pedidos/events")).andExpect(status().is3xxRedirection());
     }
 
+    @Test
+    void platformAdminOperatesSingleActiveStoreOnly() throws Exception {
+        Fixture f = fixture();
+        User plat = platformAdmin();
+        var platUser = user(plat.getEmail()).roles("PLATFORM_ADMIN");
+        // Com 2+ lojas ativas (loja 1 do seed + loja 2 do fixture): comportamento anterior —
+        // PLATFORM_ADMIN não opera loja pelo /admin (404 nas rotas de loja).
+        mvc.perform(get("/admin/produtos").with(platUser)).andExpect(status().isNotFound());
+        // Com exatamente 1 loja ativa: o dono da plataforma opera essa loja pelo /admin.
+        // (Outros testes podem ter criado lojas ativas antes; desativamos todas menos a loja 1.)
+        Store s1 = stores.findFirstByActiveTrueOrderByIdAsc().orElseThrow();
+        java.util.List<Store> paused = stores.findAll().stream().filter(Store::isActive).filter(s -> !s.getId().equals(s1.getId())).toList();
+        try {
+            paused.forEach(s -> { s.setActive(false); stores.save(s); });
+            mvc.perform(get("/admin").with(platUser)).andExpect(status().isOk())
+                    .andExpect(content().string(containsString("Pedidos")));
+            mvc.perform(get("/admin/produtos").with(platUser)).andExpect(status().isOk());
+            mvc.perform(get("/admin/pedidos").with(platUser)).andExpect(status().isOk());
+            mvc.perform(get("/admin/clientes").with(platUser)).andExpect(status().isOk());
+            mvc.perform(get("/admin/configuracoes").with(platUser)).andExpect(status().isOk());
+        } finally {
+            paused.forEach(s -> { s.setActive(true); stores.save(s); });
+        }
+    }
+
     private User platformAdmin() {
         return users.findByEmailIgnoreCase("platform-mt@example.com").orElseGet(() -> {
             User u = new User(); u.setName("Plataforma MT"); u.setEmail("platform-mt@example.com");

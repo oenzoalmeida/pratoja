@@ -1,3 +1,4 @@
+(()=>{
 const cartBase=()=>document.querySelector('[data-cart-base]')?.dataset.cartBase||'/api/cart';
 const csrf=()=>document.querySelector('#csrf-form input[name="_csrf"]')?.value||decodeURIComponent(document.cookie.split('; ').find(c=>c.startsWith('XSRF-TOKEN='))?.split('=')[1]||'');
 async function cartRequest(url,method,body){
@@ -21,3 +22,4 @@ if(notes){
   let timer;
   notes.oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>cartRequest(cartBase()+'/notes','PATCH',{notes:notes.value}),500)};
 }
+})();

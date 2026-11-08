@@ -42,7 +42,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * duplicata nao reprocessa, valor divergente nao confirma, estorno cancela,
  * e loja sem conexao segue no modo simulado.
  */
-@SpringBootTest
+// Limites do fluxo de pedido folgados aqui: a classe faz vários checkouts com a mesma
+// conta no mesmo contexto; o comportamento do limiter é coberto em OrderRateLimiterTests.
+@SpringBootTest(properties = {
+        "pratoja.checkout.rate-limit.max-attempts=1000",
+        "pratoja.payment.card.rate-limit.max-attempts=1000",
+        "pratoja.payment.verify.rate-limit.max-attempts=1000"})
 @AutoConfigureMockMvc
 class MercadoPagoIntegrationTests {
     private static final String WEBHOOK_SECRET = "wh-test-secret";

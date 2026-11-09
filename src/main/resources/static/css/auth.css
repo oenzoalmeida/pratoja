@@ -1,0 +1,32 @@
+/* Login e cadastro do cliente: só visual. Mesmos campos, mesmas rotas, mesma validação no servidor. */
+.auth-card{border-radius:24px;box-shadow:0 1px 2px var(--ink-a08),0 18px 44px var(--ink-a08)}
+.auth-card form{gap:14px}
+.auth-card .field{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.auth-card .field>label{font-size:13px;font-weight:700;display:block}
+.auth-card .field-box{position:relative;display:flex;align-items:center;background:var(--surface-warm,#faf6ee);border:1.5px solid transparent;border-radius:18px;transition:border-color .2s,box-shadow .2s,background-color .2s}
+.auth-card .field-box:hover{border-color:var(--line)}
+.auth-card .field-box:focus-within{background:#fff;border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-a12)}
+.auth-card .field-icon{position:absolute;left:16px;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .2s}
+.auth-card .field-box:focus-within .field-icon{stroke:var(--orange)}
+.auth-card .field-box input{border:0;background:transparent;border-radius:18px;min-height:52px;padding:14px 16px 14px 46px;box-shadow:none;font-size:16px}
+.auth-card .field-box input:focus{box-shadow:none;border:0}
+.auth-card .field-box input::placeholder{color:#9b9181;font-weight:400}
+.auth-card .field-box:has(input:user-invalid),.auth-card .field.invalid .field-box{border-color:var(--danger);background:#fff7f5}
+.auth-card .field-box:has(input:user-invalid):focus-within,.auth-card .field.invalid .field-box:focus-within{box-shadow:0 0 0 4px rgba(167,47,32,.14)}
+.auth-card .pw-toggle{flex:0 0 auto;margin-right:8px;border:0;background:transparent;color:var(--orange);font-size:13px;font-weight:700;padding:10px;min-height:44px;cursor:pointer;border-radius:12px}
+.auth-card .pw-toggle:hover{background:var(--orange-a08)}
+.auth-card .pw-toggle:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+.auth-card .pw-toggle+*{margin:0}
+.auth-card .field-box:has(.pw-toggle) input{padding-right:6px}
+.auth-card .field-error{margin:0;font-size:13px;font-weight:600;color:var(--danger);max-height:0;opacity:0;overflow:hidden;transform:translateY(-4px);transition:max-height .22s var(--ease-out,ease),opacity .22s,transform .22s}
+.auth-card .field-error.show{max-height:60px;opacity:1;transform:none}
+.auth-card .field-hint{color:var(--muted);font-size:12.5px;margin-top:-4px}
+.auth-card .form-link{align-self:flex-end;margin-top:-4px;min-height:32px;display:inline-flex;align-items:center}
+.auth-card .auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.auth-card .auth-actions .btn{width:100%;justify-content:center;white-space:nowrap}
+.auth-card .btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.auth-card .btn-ghost:hover{border-color:var(--orange);color:var(--orange);background:var(--surface-warm,#faf6ee)}
+.auth-card .btn:active{transform:scale(.98)}
+.auth-card .alert{border-radius:16px;display:flex;gap:10px;align-items:flex-start}
+@media(max-width:600px){.auth-card .form-row{flex-direction:column;gap:14px}.auth-card .auth-actions{gap:10px}.auth-card .auth-actions .btn{padding-inline:12px}}
+@media(prefers-reduced-motion:reduce){.auth-card .field-box,.auth-card .field-error,.auth-card .field-icon{transition:none}.auth-card .btn:active{transform:none}}

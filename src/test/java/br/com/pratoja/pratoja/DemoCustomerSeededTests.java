@@ -9,9 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Banco em memória exclusivo desta classe: o DataSeeder roda no boot do contexto.
- * Com demo-mode ATIVO (default), a conta de demonstração é provisionada como antes.
+ * Com demo-mode ATIVO (explícito aqui; o padrão da aplicação é DESLIGADO),
+ * a conta de demonstração é provisionada como antes.
  */
 @SpringBootTest(properties = {
+        "pratoja.demo-mode=true",
         "spring.datasource.url=jdbc:h2:mem:demo-seeded;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
         "spring.datasource.username=sa", "spring.datasource.password=",
         "spring.flyway.locations=classpath:db/migration,classpath:db/migration-h2",

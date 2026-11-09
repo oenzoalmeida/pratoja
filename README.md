@@ -12,7 +12,7 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 **Acesso de avaliação:** a página de login da demo pública não exibe credenciais de demonstração (verificado em nov/2026). Para avaliar, crie sua conta pelo [cadastro](https://18.220.70.13.sslip.io/cadastro) (dados fictícios; nenhuma cobrança real). O acesso administrativo é provisionado internamente e não possui credencial pública.
 
-**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123`. Essa conta é semeada automaticamente apenas quando o modo demo está ligado (na **execução local** ele vem ligado por padrão, ver "Executando localmente"); a página de login exibe essas credenciais nesse modo. Na demo pública, prefira o cadastro de uma conta nova.
+**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123`. Essa conta é semeada automaticamente apenas quando o modo demo está ligado. O modo demo vem **desligado por padrão** em qualquer ambiente (inclusive na execução local) e só deve ser ativado explicitamente em ambientes de demonstração, com `PRATOJA_DEMO_MODE=true` (ver "Executando localmente"); a página de login exibe essas credenciais nesse modo. Na demo pública, prefira o cadastro de uma conta nova.
 
 ## Telas
 
@@ -111,7 +111,7 @@ Testes:
 | `DATABASE_URL` / `DATABASE_USERNAME` / `DATABASE_PASSWORD` | Conexão PostgreSQL (perfil `postgres`, utilizado em produção) |
 | `PRATOJA_ADMIN_PASSWORD` | Senha do administrador da loja seed. **Obrigatória em produção**: sem ela o boot falha |
 | `PRATOJA_PLATFORM_ADMIN_PASSWORD` | Provisiona o administrador da plataforma quando definida |
-| `PRATOJA_DEMO_MODE` | Modo demonstração (`true`/`false`) |
+| `PRATOJA_DEMO_MODE` | Modo demonstração. Padrão `false` (desligado); ative com `true` apenas em ambientes de demonstração |
 | `PRATOJA_MAIL_ENABLED`, `SMTP_*`, `MAIL_FROM`, `MAIL_BASE_URL` | Envio real de e-mail (outbox). Detalhes em [docs/email-e-recuperacao-de-senha.md](docs/email-e-recuperacao-de-senha.md) |
 
 Nenhuma credencial é versionada.

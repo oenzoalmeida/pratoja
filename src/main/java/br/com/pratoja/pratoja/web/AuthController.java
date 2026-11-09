@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
     private final AccountService accounts;private final br.com.pratoja.pratoja.service.PasswordRecoveryService recovery;
     private final RecoveryRateLimiter rateLimiter;private final AuthRateLimiter authRateLimiter;private final ClientIpResolver ipResolver;
-    @Value("${pratoja.demo-mode:true}")private boolean demo;@Value("${pratoja.demo-reset-email:cliente@pratoja.com.br}")private String demoResetEmail;@Value("${pratoja.mail.enabled:false}")private boolean mailEnabled;
+    @Value("${pratoja.demo-mode:false}")private boolean demo;@Value("${pratoja.demo-reset-email:cliente@pratoja.com.br}")private String demoResetEmail;@Value("${pratoja.mail.enabled:false}")private boolean mailEnabled;
     @GetMapping("/login")String login(Model model){model.addAttribute("demo",demo);return "auth/login";}@GetMapping("/admin/login")String adminLogin(){return "auth/admin-login";}@GetMapping("/cadastro")String register(){return "auth/register";}
     // Rate limit por IP no cadastro (contém criação em massa de contas). Ao estourar, devolve a mesma
     // view de cadastro com mensagem genérica — sem processar nada e sem oráculo sobre contas existentes.

@@ -27,7 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Rate limit de recuperação desativado NESSE contexto (limites altos): esta classe testa a segurança do
 // fluxo de recuperação, não o limitador (coberto por RecoveryRateLimitTests). Vários POSTs da suite partem
 // do mesmo IP simulado (127.0.0.1) e o limitador é um singleton do contexto compartilhado.
+// demo-mode ligado explicitamente: o padrão da aplicação passou a ser DESLIGADO e estes testes
+// exercitam justamente o comportamento do modo demo (conta demo semeada, demoLink só para ela).
 @SpringBootTest(properties = {
+        "pratoja.demo-mode=true",
         "pratoja.recovery.rate-limit.max-attempts-per-ip=1000",
         "pratoja.recovery.rate-limit.max-per-email=1000"
 })

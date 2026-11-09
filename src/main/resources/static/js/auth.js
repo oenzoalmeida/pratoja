@@ -38,13 +38,4 @@
     fields.forEach(function(f){if(!check(f)&&!first)first=f});
     if(first){e.preventDefault();first.querySelector('input').focus()}
   });
-  [].forEach.call(form.querySelectorAll('[data-pw-toggle]'),function(btn){
-    btn.addEventListener('click',function(){
-      var input=btn.parentNode.querySelector('input'),on=input.type==='password';
-      input.type=on?'text':'password';
-      btn.textContent=on?'Ocultar':'Mostrar';
-      btn.setAttribute('aria-pressed',on?'true':'false');
-      btn.setAttribute('aria-label',on?'Ocultar senha':'Mostrar senha');
-    });
-  });
 })();

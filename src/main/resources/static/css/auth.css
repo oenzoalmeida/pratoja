@@ -30,3 +30,20 @@
 .auth-card .alert{border-radius:16px;display:flex;gap:10px;align-items:flex-start}
 @media(max-width:600px){.auth-card .form-row{flex-direction:column;gap:14px}.auth-card .auth-actions{gap:10px}.auth-card .auth-actions .btn{padding-inline:12px}}
 @media(prefers-reduced-motion:reduce){.auth-card .field-box,.auth-card .field-error,.auth-card .field-icon{transition:none}.auth-card .btn:active{transform:none}}
+/* Bistro editorial: arco de terracota e prato ilustrado, sem imagens externas. */
+.auth-wrap{display:grid;grid-template-columns:1fr;width:min(100%,540px)}
+.auth-scene{display:grid;place-items:center;background:#efe2cd;border-radius:100px 100px 0 0;padding:20px 30px 0;overflow:hidden}
+.auth-scene svg{display:block;width:180px;max-width:100%;height:auto}
+.auth-card{border-radius:0 0 24px 24px}
+.auth-wrap>.brand{grid-column:1/-1}
+.auth-password{position:relative;display:block;width:100%}
+.auth-password input{padding-right:52px!important}
+.auth-password>.pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);margin:0}
+.pw-toggle svg{width:20px;height:20px;display:block}
+.pw-toggle .eye-off{display:none}.pw-toggle[aria-pressed="true"] .eye-off{display:block}
+@media(min-width:900px){
+ .auth-wrap,.auth-wrap.wide{width:min(95vw,980px);grid-template-columns:.8fr 1.2fr;align-items:stretch}
+ .auth-scene{border-radius:180px 0 0 0;padding:35px}
+ .auth-scene svg{width:100%}
+ .auth-card{border-radius:0 24px 24px 0}
+}

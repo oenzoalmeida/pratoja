@@ -47,6 +47,7 @@
 </header>
 
 <nav th:fragment="mobileNav" class="mobile-nav" aria-label="Navegação móvel">
+  <span class="mobile-nav-pill" aria-hidden="true"></span>
   <a th:href="@{/loja/{slug}(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('house','')}"></svg><span>Início</span></a>
   <a th:href="@{/loja/{slug}/cardapio(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('utensils','')}"></svg><span>Cardápio</span></a>
   <a th:href="@{/loja/{slug}/monte-seu-prato(slug=${store.slug})}"><svg th:replace="~{fragments :: icon('chef-hat','')}"></svg><span>Montar</span></a>

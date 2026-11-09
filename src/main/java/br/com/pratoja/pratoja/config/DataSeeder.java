@@ -22,7 +22,7 @@ public class DataSeeder implements CommandLineRunner {
 
     // Conta de demonstração conhecida (cliente@pratoja.com.br / Cliente@123) só faz sentido em
     // ambiente de demonstração: em produção (demo-mode=false) ela NÃO é criada.
-    @Value("${pratoja.demo-mode:true}") private boolean demoMode;
+    @Value("${pratoja.demo-mode:false}") private boolean demoMode;
 
     @Override @Transactional public void run(String... args) {
         // A senha administrativa vem exclusivamente de PRATOJA_ADMIN_PASSWORD (nenhum padrão embutido).

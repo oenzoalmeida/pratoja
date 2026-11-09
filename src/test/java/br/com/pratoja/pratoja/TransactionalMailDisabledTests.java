@@ -31,7 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 // Mesmas properties de PasswordRecoverySecurityTests: os dois contextos continuam idênticos e compartilhados
 // (o limitador é singleton por contexto e várias requisições da suite saem do mesmo IP simulado 127.0.0.1).
+// demo-mode ligado explicitamente: o padrão da aplicação passou a ser DESLIGADO e estes testes
+// exercitam justamente o comportamento do modo demo (demoLink em tela, conta demo semeada).
 @SpringBootTest(properties = {
+        "pratoja.demo-mode=true",
         "pratoja.recovery.rate-limit.max-attempts-per-ip=1000",
         "pratoja.recovery.rate-limit.max-per-email=1000"
 })

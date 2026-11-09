@@ -520,3 +520,119 @@ body{background:var(--cream)}
   .section-heading.row{align-items:end}
   .custom-cta{min-height:0}
 }
+
+/* ============================================================
+   Polimento nov/2026 — referências de design enviadas pelo Enzo:
+   tela inicial premium (@designgrids: busca grande, ações rápidas)
+   e abas com indicador deslizante + micro-animações (@settigation).
+   Adaptado à identidade editorial do PratoJá (creme + terracota,
+   Fraunces). Só visual e sensação de uso: mesmas rotas, mesmos
+   dados, nenhuma biblioteca nova. Tudo em transform/opacity; o
+   bloco global de prefers-reduced-motion do app.css já cobre as
+   animações e transições desta seção.
+   ============================================================ */
+
+/* ---------- Home: busca grande no hero (vai para o cardápio com ?q=) ---------- */
+.hero-search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);
+  border-radius:18px;padding:6px 6px 6px 18px;box-shadow:0 10px 26px rgba(36,29,19,.07);
+  max-width:520px;margin:28px 0 0;transition:border-color .2s,box-shadow .2s;animation:pj-rise .4s var(--ease-out) both}
+.hero-search>.icon{width:20px;height:20px;color:var(--muted);flex:none}
+.hero-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:13px 0;font-size:16px}
+.hero-search button{flex:none;width:46px;height:46px;border:0;border-radius:14px;background:var(--orange);
+  color:#fff;display:grid;place-items:center;cursor:pointer;transition:background .18s,transform .18s var(--ease-out)}
+.hero-search button:hover{background:var(--orange-dark);transform:scale(1.05)}
+.hero-search button:active{transform:scale(.93);transition-duration:.06s}
+.hero-search button .icon{width:19px;height:19px}
+.hero-search:focus-within{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-a12),0 10px 26px rgba(36,29,19,.07)}
+
+/* ---------- Home: ações rápidas (mesmos destinos de sempre) ---------- */
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;margin:14px 0 4px}
+.quick-action{display:flex;flex-direction:column;align-items:flex-start;gap:10px;background:#fff;
+  border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 8px 20px rgba(36,29,19,.05);
+  transition:transform .18s var(--ease-out),box-shadow .18s,border-color .18s;animation:pj-rise .4s var(--ease-out) both}
+.quick-action:nth-child(2){animation-delay:.05s}
+.quick-action:nth-child(3){animation-delay:.1s}
+.quick-action:nth-child(4){animation-delay:.15s}
+.quick-action:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(36,29,19,.10);
+  border-color:color-mix(in srgb,var(--orange) 35%,var(--line))}
+.quick-action:active{transform:scale(.97);transition-duration:.06s}
+.quick-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none;
+  background:color-mix(in srgb,var(--orange) 10%,#fff);color:var(--orange)}
+.quick-icon .icon{width:20px;height:20px}
+.quick-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.quick-text strong{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.quick-text small{color:var(--muted);font-size:12px}
+.quick-arrow{width:20px;height:20px;flex:none;transition:transform .2s var(--ease-out)}
+.quick-primary{grid-column:1/-1;flex-direction:row;align-items:center;background:var(--orange);
+  border-color:var(--orange);color:#fff;padding:16px 18px}
+.quick-primary .quick-icon{background:rgba(255,255,255,.16);color:#fff}
+.quick-primary .quick-text{flex:1}
+.quick-primary .quick-text small{color:rgba(255,255,255,.82)}
+.quick-primary:hover{background:var(--orange-dark);border-color:var(--orange-dark)}
+.quick-primary:hover .quick-arrow{transform:translateX(4px)}
+.hero .hero-proof{margin-top:22px}
+
+/* ---------- Navegação: indicador deslizante e estado ativo ---------- */
+/* A barra móvel ganha uma "pílula" que desliza até a aba ativa (posicionada via app.js). */
+.mobile-nav-pill{position:absolute;top:50%;left:0;width:62px;height:46px;border-radius:16px;
+  background:color-mix(in srgb,var(--orange) 12%,#fff);opacity:0;pointer-events:none;
+  transform:translate(0,-50%);transition:transform .34s var(--ease-out),opacity .25s}
+.mobile-nav a{position:relative;z-index:1;transition:color .2s}
+.mobile-nav a .icon{transition:transform .28s var(--ease-out)}
+.mobile-nav a.active{color:var(--orange)}
+.mobile-nav a.active .icon{transform:translateY(-2px)}
+@keyframes pj-pill-in{from{opacity:0;scale:.72}to{opacity:1;scale:1}}
+.mobile-nav.nav-ready .mobile-nav-pill{opacity:1;animation:pj-pill-in .32s var(--ease-out)}
+
+/* Navegação desktop: sublinhado que desliza no hover e marca a página atual. */
+.desktop-nav a::after{content:'';position:absolute;left:0;right:0;bottom:4px;height:2px;border-radius:2px;
+  background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .26s var(--ease-out)}
+.desktop-nav a:hover::after,.desktop-nav a.active::after{transform:scaleX(1)}
+.desktop-nav a.active{color:var(--orange)}
+
+/* Sacola: o contador "estoura" de leve quando muda (feedback imediato). */
+@keyframes pj-badge-pop{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.cart-link strong.pop{animation:pj-badge-pop .32s var(--ease-out)}
+
+/* ---------- Acompanhamento: etapas com progresso animado ---------- */
+/* A linha entre etapas se desenha, os marcadores concluídos "estouram" em sequência
+   e a etapa atual pulsa de leve. Só transform/opacity/box-shadow. */
+@keyframes pj-step-pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.timeline li.done .timeline-marker{animation:pj-step-pop .35s var(--ease-out) both}
+.timeline li:nth-child(2).done .timeline-marker{animation-delay:.07s}
+.timeline li:nth-child(3).done .timeline-marker{animation-delay:.14s}
+.timeline li:nth-child(4).done .timeline-marker{animation-delay:.21s}
+.timeline li:nth-child(5).done .timeline-marker{animation-delay:.28s}
+.timeline li:nth-child(6).done .timeline-marker{animation-delay:.35s}
+.timeline li.current .timeline-marker{animation:pj-step-pop .35s var(--ease-out) both,pj-current-pulse 2.4s ease-in-out .5s infinite}
+@keyframes pj-current-pulse{0%,100%{box-shadow:0 0 0 5px var(--orange-a20)}50%{box-shadow:0 0 0 9px var(--orange-a12)}}
+.timeline li:not(:last-child):before{transform-origin:left center;animation:pj-line-draw .5s var(--ease-out) both}
+.timeline li:nth-child(2):before{animation-delay:.07s}
+.timeline li:nth-child(3):before{animation-delay:.14s}
+.timeline li:nth-child(4):before{animation-delay:.21s}
+.timeline li:nth-child(5):before{animation-delay:.28s}
+.timeline li:nth-child(6):before{animation-delay:.35s}
+@keyframes pj-line-draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ---------- Mobile ---------- */
+@media(max-width:900px){
+  .hero-search{margin-inline:auto}
+  .quick-actions{margin-inline:auto}
+}
+@media(max-width:800px){
+  /* timeline vertical: a linha cresce de cima para baixo */
+  .timeline li:not(:last-child):before{transform-origin:center top;animation-name:pj-line-draw-v}
+}
+@keyframes pj-line-draw-v{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media(max-width:600px){
+  .hero-search{margin-top:22px;border-radius:16px}
+  .quick-actions{gap:10px}
+  .quick-action{padding:12px;border-radius:16px}
+  .quick-icon{width:38px;height:38px;border-radius:12px}
+  .quick-text strong{font-size:13px}
+  .quick-text small{font-size:11px}
+  .quick-primary{padding:14px 16px}
+}
+@media(max-width:380px){
+  .quick-text small{display:none}
+}

@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const csrfToken=form=>form?.querySelector('input[name="_csrf"]')?.value||decodeURIComponent(document.cookie.split('; ').find(c=>c.startsWith('XSRF-TOKEN='))?.split('=')[1]||'');
 function toast(message,error=false){const el=document.createElement('div');el.className='toast'+(error?' error':'');el.setAttribute('role',error?'alert':'status');el.setAttribute('aria-live',error?'assertive':'polite');el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),2800)}
 const cartBase=()=>document.querySelector('[data-cart-base]')?.dataset.cartBase||'/api/cart';
-async function cartCount(){try{const r=await fetch(cartBase());if(!r.ok)return;const c=await r.json();document.querySelectorAll('[data-cart-count]').forEach(e=>e.textContent=c.count)}catch{}}
+async function cartCount(){try{const r=await fetch(cartBase());if(!r.ok)return;const c=await r.json();document.querySelectorAll('[data-cart-count]').forEach(e=>{const changed=e.textContent!==String(c.count);e.textContent=c.count;if(changed){e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop')}})}catch{}}
 document.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>{const i=b.parentElement.querySelector('input');i.value=Math.max(1,+i.value-1)});
 document.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>{const i=b.parentElement.querySelector('input');i.value=Math.min(20,+i.value+1)});
 document.querySelectorAll('.builder fieldset').forEach(group=>group.addEventListener('change',e=>{const max=+group.dataset.max;if(e.target.type==='checkbox'&&group.querySelectorAll('input:checked').length>max){e.target.checked=false;toast(`Escolha no máximo ${max} opções.`,true)}updateBuilder()}));
@@ -35,3 +35,49 @@ document.querySelectorAll('.quick-add-form').forEach(form=>form.addEventListener
 document.querySelectorAll('form[data-confirm]').forEach(form=>form.addEventListener('submit',event=>{
   if(!window.confirm(form.dataset.confirm))event.preventDefault();
 }));
+
+// ---- Abas com indicador deslizante e estado ativo (micro-interações de navegação) ----
+// Marca a aba da página atual (aria-current) e posiciona a "pílula" da barra móvel.
+// Não altera rotas nem conteúdo; se algo faltar na página, simplesmente não faz nada.
+(function(){
+  const path=location.pathname;
+  function score(href){
+    if(!href||href==='#')return 0;
+    if(href===path)return 10000+href.length;
+    if(href!=='/'&&path.startsWith(href.endsWith('/')?href:href+'/'))return href.length;
+    return 0;
+  }
+  function pickActive(nav){
+    const links=[...nav.querySelectorAll('a[href]')];
+    // Páginas sem aba própria herdam a aba mais próxima:
+    // produto→cardápio, checkout→sacola, pedidos/histórico→perfil.
+    const alias=[['/produto/','/cardapio'],['/checkout','/carrinho'],['/pedidos/','/perfil'],['/historico','/perfil']];
+    let forced=null;
+    for(const[frag,target]of alias){if(path.includes(frag)){forced=target;break}}
+    let best=null,bestScore=0;
+    for(const a of links){
+      const href=a.getAttribute('href');
+      if(forced&&href&&href.includes(forced))return a;
+      const s=score(href);
+      if(s>bestScore){bestScore=s;best=a}
+    }
+    return best;
+  }
+  function setup(nav,pill){
+    if(!nav)return;
+    const active=pickActive(nav);
+    if(!active)return;
+    active.classList.add('active');
+    active.setAttribute('aria-current','page');
+    if(!pill)return;
+    const place=()=>{
+      const x=active.offsetLeft+(active.offsetWidth-pill.offsetWidth)/2;
+      pill.style.transform=`translate(${Math.max(4,x)}px,-50%)`;
+    };
+    place();
+    requestAnimationFrame(()=>nav.classList.add('nav-ready'));
+    let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(place,120)});
+  }
+  setup(document.querySelector('.mobile-nav'),document.querySelector('.mobile-nav-pill'));
+  setup(document.querySelector('.desktop-nav'),null);
+})();

@@ -2,6 +2,8 @@ package br.com.pratoja.pratoja.config;
 
 import br.com.pratoja.pratoja.domain.DomainTypes;
 import br.com.pratoja.pratoja.repository.UserRepository;
+import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.*;
@@ -10,11 +12,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 public class SecurityConfig {
+    @Value("${pratoja.security.remember-me-key}") private String rememberMeKey;
+    @Value("${pratoja.security.remember-me-validity-days}") private int rememberMeValidityDays;
+
     @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
+
+    // "Manter conectado": tokens persistentes no banco (tabela persistent_logins, V13).
+    // Troca de senha invalida os tokens; logout remove o token da sessão atual.
+    @Bean PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
+        JdbcTokenRepositoryImpl tokens = new JdbcTokenRepositoryImpl();
+        tokens.setDataSource(dataSource);
+        return tokens;
+    }
 
     @Bean UserDetailsService userDetailsService(UserRepository users) {
         return email -> users.findByEmailIgnoreCase(email)
@@ -32,7 +47,8 @@ public class SecurityConfig {
     }
 
     @Bean SecurityFilterChain security(HttpSecurity http, AuthenticationSuccessHandler successHandler,
-                                       AuthRateLimiter authRateLimiter, ClientIpResolver ipResolver) throws Exception {
+                                       AuthRateLimiter authRateLimiter, ClientIpResolver ipResolver,
+                                       PersistentTokenRepository persistentTokenRepository) throws Exception {
         http.addFilterBefore(new LoginRateLimitFilter(authRateLimiter, ipResolver), UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 // Webhook do provedor de pagamento nao tem sessao/CSRF; protegido por assinatura HMAC propria.
@@ -50,7 +66,12 @@ public class SecurityConfig {
             .formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
                     .usernameParameter("email").passwordParameter("password")
                     .successHandler(successHandler).failureUrl("/login?error").permitAll())
-            .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/").invalidateHttpSession(true).deleteCookies("JSESSIONID"))
+            .rememberMe(remember -> remember
+                    .tokenRepository(persistentTokenRepository)
+                    .tokenValiditySeconds(rememberMeValidityDays * 24 * 60 * 60)
+                    .rememberMeCookieName("PRATOJA_REMEMBER_ME")
+                    .key(rememberMeKey))
+            .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/").invalidateHttpSession(true).deleteCookies("JSESSIONID", "PRATOJA_REMEMBER_ME"))
             .sessionManagement(session -> session.sessionFixation(fix -> fix.migrateSession()))
             .exceptionHandling(errors -> errors.accessDeniedHandler((req, res, ex) -> res.sendRedirect("/?acesso-negado")));
         return http.build();

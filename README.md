@@ -12,7 +12,7 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 **Acesso de avaliação:** a página de login da demo pública não exibe credenciais de demonstração (verificado em nov/2026). Para avaliar, crie sua conta pelo [cadastro](https://18.220.70.13.sslip.io/cadastro) (dados fictícios; nenhuma cobrança real). O acesso administrativo é provisionado internamente e não possui credencial pública.
 
-**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123`. Essa conta é semeada automaticamente apenas quando o modo demo está ligado. O modo demo vem **desligado por padrão** em qualquer ambiente (inclusive na execução local) e só deve ser ativado explicitamente em ambientes de demonstração, com `PRATOJA_DEMO_MODE=true` (ver "Executando localmente"); a página de login exibe essas credenciais nesse modo. Na demo pública, prefira o cadastro de uma conta nova.
+**Conta de exemplo em ambiente demo:** o usuário `cliente@pratoja.com.br` é criado somente quando `PRATOJA_DEMO_MODE=true` em um ambiente de demonstração controlado. O modo demo permanece **desligado por padrão**, inclusive na execução local. A própria página de login exibe as informações de acesso quando esse modo está habilitado. **Na demonstração pública atual, crie uma conta com dados fictícios** em vez de assumir que a conta de exemplo está disponível.
 
 ## Telas
 

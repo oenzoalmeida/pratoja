@@ -12,7 +12,7 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 **Acesso de avaliação:** a página de login da demo pública não exibe credenciais de demonstração (verificado em nov/2026). Para avaliar, crie sua conta pelo [cadastro](https://18.220.70.13.sslip.io/cadastro) (dados fictícios; nenhuma cobrança real). O acesso administrativo é provisionado internamente e não possui credencial pública.
 
-**Conta demo (cliente):** `cliente@pratoja.com.br` / `Cliente@123`. Essa conta é semeada automaticamente apenas quando o modo demo está ligado. O modo demo vem **desligado por padrão** em qualquer ambiente (inclusive na execução local) e só deve ser ativado explicitamente em ambientes de demonstração, com `PRATOJA_DEMO_MODE=true` (ver "Executando localmente"); a página de login exibe essas credenciais nesse modo. Na demo pública, prefira o cadastro de uma conta nova.
+**Conta de exemplo em ambiente demo:** o usuário `cliente@pratoja.com.br` é criado somente quando `PRATOJA_DEMO_MODE=true` em um ambiente de demonstração controlado. O modo demo permanece **desligado por padrão**, inclusive na execução local. A própria página de login exibe as informações de acesso quando esse modo está habilitado. **Na demonstração pública atual, crie uma conta com dados fictícios** em vez de assumir que a conta de exemplo está disponível.
 
 ## Telas
 
@@ -75,6 +75,19 @@ Toda consulta é escopada por loja (`findByIdAndStore_Id` etc.). Acesso a objeto
 Páginas públicas por slug em `/loja/{slug}`. Sacola em sessão por loja. Rotas antigas sem slug redirecionam 301 para a loja única ativa (com 2+ lojas ativas, `/` lista as lojas).
 
 ## Arquitetura / Estrutura
+
+Fluxo simplificado do monólito MVC e do isolamento lógico por estabelecimento:
+
+```mermaid
+flowchart LR
+  C[Cliente / operador] --> MVC[Controllers Spring MVC]
+  MVC --> SRV[Serviços e regras de negócio]
+  SRV --> REP[Repositórios JPA com contexto da loja]
+  REP --> DB[(PostgreSQL)]
+  MVC --> HTML[Templates Thymeleaf]
+```
+
+O diagrama mostra as responsabilidades principais e não implica que cada loja tenha banco físico separado. O isolamento ocorre por identificador de loja nas consultas e regras de acesso, conforme a documentação de multitenancy.
 
 ```text
 src/main/java/br/com/pratoja/pratoja/
@@ -145,7 +158,7 @@ Proteção contra abuso nos endpoints públicos de autenticação (janela fixa e
 - **Cadastro** conta tentativas por IP (`PRATOJA_SIGNUP_RATE_LIMIT_MAX_ATTEMPTS_PER_IP`, default 50/h).
 - **Recuperação/redefinição de senha** mantêm os limites já existentes (por IP e por e-mail, resposta genérica anti-enumeração).
 
-Login/cadastro ainda não têm rate limiting (apenas as rotas de recuperação).
+Login e cadastro possuem rate limiting em memória por instância, conforme os limites descritos acima. A recuperação e a redefinição de senha também são protegidas por limites próprios. Esses controles não substituem uma solução distribuída de proteção contra abuso em implantações com várias instâncias.
 
 O e-mail da conta não é editável após o cadastro.
 

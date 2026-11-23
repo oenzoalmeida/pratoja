@@ -47,7 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "pratoja.checkout.rate-limit.max-attempts=1000",
         "pratoja.payment.card.rate-limit.max-attempts=1000",
-        "pratoja.payment.verify.rate-limit.max-attempts=1000"})
+        "pratoja.payment.verify.rate-limit.max-attempts=1000",
+        "pratoja.demo-mode=true"})
 @AutoConfigureMockMvc
 class MercadoPagoIntegrationTests {
     private static final String WEBHOOK_SECRET = "wh-test-secret";

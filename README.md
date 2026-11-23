@@ -145,7 +145,7 @@ Proteção contra abuso nos endpoints públicos de autenticação (janela fixa e
 - **Cadastro** conta tentativas por IP (`PRATOJA_SIGNUP_RATE_LIMIT_MAX_ATTEMPTS_PER_IP`, default 50/h).
 - **Recuperação/redefinição de senha** mantêm os limites já existentes (por IP e por e-mail, resposta genérica anti-enumeração).
 
-Login/cadastro ainda não têm rate limiting (apenas as rotas de recuperação).
+Login e cadastro possuem rate limiting em memória por instância, conforme os limites descritos acima. A recuperação e a redefinição de senha também são protegidas por limites próprios. Esses controles não substituem uma solução distribuída de proteção contra abuso em implantações com várias instâncias.
 
 O e-mail da conta não é editável após o cadastro.
 

@@ -76,6 +76,19 @@ Páginas públicas por slug em `/loja/{slug}`. Sacola em sessão por loja. Rotas
 
 ## Arquitetura / Estrutura
 
+Fluxo simplificado do monólito MVC e do isolamento lógico por estabelecimento:
+
+```mermaid
+flowchart LR
+  C[Cliente / operador] --> MVC[Controllers Spring MVC]
+  MVC --> SRV[Serviços e regras de negócio]
+  SRV --> REP[Repositórios JPA com contexto da loja]
+  REP --> DB[(PostgreSQL)]
+  MVC --> HTML[Templates Thymeleaf]
+```
+
+O diagrama mostra as responsabilidades principais e não implica que cada loja tenha banco físico separado. O isolamento ocorre por identificador de loja nas consultas e regras de acesso, conforme a documentação de multitenancy.
+
 ```text
 src/main/java/br/com/pratoja/pratoja/
 ├── config/       Security, seeding e inicialização

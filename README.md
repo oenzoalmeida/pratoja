@@ -8,7 +8,7 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 **Aplicação:** https://18.220.70.13.sslip.io
 
-> A demo fica no ar continuamente em um servidor na AWS (Lightsail). Se preferir, os passos abaixo executam o projeto localmente em poucos minutos.
+> A demonstração está hospedada na AWS (Lightsail). As instruções abaixo permitem executar o projeto localmente.
 
 **Acesso de avaliação:** a página de login da demo pública não exibe credenciais de demonstração (verificado em nov/2026). Para avaliar, crie sua conta pelo [cadastro](https://18.220.70.13.sslip.io/cadastro) (dados fictícios; nenhuma cobrança real). O acesso administrativo é provisionado internamente e não possui credencial pública.
 
@@ -26,7 +26,7 @@ Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a iden
 
 O PratoJá implementa o fluxo de um pedido online: navegação no cardápio, montagem do prato com grupos de opções e adicionais, carrinho com taxa de entrega, checkout com entrega ou retirada, acompanhamento do status em tempo real, histórico, avaliação e repetição de pedido. Também inclui os painéis administrativos de loja e de plataforma.
 
-Cada loja vive sob `/loja/{slug}` (home, cardápio, produto, monte-seu-prato, sacola, checkout, acompanhamento), com dados isolados por `store_id` em todas as consultas do back-end.
+Cada loja utiliza as rotas sob `/loja/{slug}` (home, cardápio, produto, monte-seu-prato, sacola, checkout, acompanhamento), com dados isolados por `store_id` em todas as consultas do back-end.
 
 ## Principais funcionalidades
 

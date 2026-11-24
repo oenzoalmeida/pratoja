@@ -22,7 +22,7 @@ A aplicação usa Java e Spring Boot com Thymeleaf. Os dados são separados por 
 
 Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a identidade visual atual (nov/2026). As imagens dos pratos na demo foram geradas por IA para fins de demonstração; em uma loja real, cada restaurante envia as fotos dos próprios pratos pelo painel.
 
-## Sobre o projeto
+## Como funciona
 
 O cliente consulta o cardápio, escolhe opções e adicionais, informa se deseja entrega ou retirada e acompanha o pedido. Também pode consultar pedidos anteriores e repetir uma compra. O sistema possui painéis de administração para cada loja e para a plataforma.
 

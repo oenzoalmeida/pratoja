@@ -1,8 +1,8 @@
 # PratoJá
 
-Sistema de **cardápio digital e pedidos para múltiplas lojas**. Cada restaurante configura sua identidade visual, seus horários e a taxa de entrega pelo painel administrativo. A aplicação permite personalizar pratos e concluir pedidos, com acompanhamento de status e relatórios.
+O PratoJá é um **cardápio digital com pedidos para vários restaurantes**. Cada loja configura seu cardápio, horários e taxa de entrega no painel administrativo. Clientes podem montar pratos e acompanhar os pedidos. Administradores consultam os pedidos e relatórios.
 
-O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento de dados por loja no banco e nas consultas, migrações Flyway e testes de fluxo automatizados no CI.
+A aplicação usa Java e Spring Boot com Thymeleaf. Os dados são separados por loja nas regras de acesso e nas consultas. As migrações do banco utilizam Flyway, e os principais fluxos têm testes automatizados no CI.
 
 ## Demonstração
 
@@ -22,9 +22,9 @@ O back-end é um monolítico Java/Spring Boot (MVC + Thymeleaf) com isolamento d
 
 Capturas da [demonstração pública](https://18.220.70.13.sslip.io), com a identidade visual atual (nov/2026). As imagens dos pratos na demo foram geradas por IA para fins de demonstração; em uma loja real, cada restaurante envia as fotos dos próprios pratos pelo painel.
 
-## Sobre o projeto
+## Como funciona
 
-O PratoJá implementa o fluxo de um pedido online: navegação no cardápio, montagem do prato com grupos de opções e adicionais, carrinho com taxa de entrega, checkout com entrega ou retirada, acompanhamento do status em tempo real, histórico, avaliação e repetição de pedido. Também inclui os painéis administrativos de loja e de plataforma.
+O cliente consulta o cardápio, escolhe opções e adicionais, informa se deseja entrega ou retirada e acompanha o pedido. Também pode consultar pedidos anteriores e repetir uma compra. O sistema possui painéis de administração para cada loja e para a plataforma.
 
 Cada loja vive sob `/loja/{slug}` (home, cardápio, produto, monte-seu-prato, sacola, checkout, acompanhamento), com dados isolados por `store_id` em todas as consultas do back-end.
 
@@ -154,7 +154,7 @@ Pagamento e confirmação são **simulados**. Nenhuma cobrança real é realizad
 Recuperação de senha: por padrão não há envio de e-mail (em modo demonstração o link é exibido na tela). Com `PRATOJA_MAIL_ENABLED=true` o envio é real via SMTP.
 
 Proteção contra abuso nos endpoints públicos de autenticação (janela fixa em memória, por instância):
-- **Login** conta apenas **falhas** — por IP (`PRATOJA_LOGIN_RATE_LIMIT_MAX_FAILURES_PER_IP`, default 20/10min) e por e-mail (`..._MAX_FAILURES_PER_EMAIL`, default 8/30min). Sucesso zera os contadores, então usuários legítimos atrás de NAT não são bloqueados. Ao estourar, o redirect é `/login?limite`, sem oráculo sobre a conta.
+- **Login** contabiliza somente as **falhas**, com limites por IP (`PRATOJA_LOGIN_RATE_LIMIT_MAX_FAILURES_PER_IP`, default 20/10min) e por e-mail (`..._MAX_FAILURES_PER_EMAIL`, default 8/30min). Sucesso zera os contadores, então usuários legítimos atrás de NAT não são bloqueados. Ao estourar, o redirect é `/login?limite`, sem oráculo sobre a conta.
 - **Cadastro** conta tentativas por IP (`PRATOJA_SIGNUP_RATE_LIMIT_MAX_ATTEMPTS_PER_IP`, default 50/h).
 - **Recuperação/redefinição de senha** mantêm os limites já existentes (por IP e por e-mail, resposta genérica anti-enumeração).
 
